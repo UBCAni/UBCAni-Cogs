@@ -16,8 +16,8 @@ class LoliPolice:
 
     @commands.command(name="lolipolice")
     async def _lolipolice(self):
+        """Shows an entry from the gallery for lolipolice"""
         return await self.bot.say(choice(image_links))
 
 def setup(bot):
-    """Shows an entry from the gallery for lolipolice"""
     bot.add_cog(LoliPolice(bot))
