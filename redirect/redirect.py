@@ -1,3 +1,5 @@
+import os
+
 import discord
 from .utils.dataIO import dataIO
 from discord.ext import commands
