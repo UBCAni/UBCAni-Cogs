@@ -4,6 +4,7 @@ import discord
 from .utils.dataIO import dataIO
 from discord.ext import commands
 from .utils import checks
+from __main__ import settings
 
 def check_folders():
     if not os.path.exists("data/UBCAniCogs/redirect"):
@@ -48,25 +49,28 @@ class Redirect:
         if server is None or self.bot.user == author:
             return
 
-        print(server.id)
-        print(message.channel.id)
-
         if server.id not in self.routes or message.channel.id not in self.routes[server.id]:
             return
 
-        print("Success 2")
-
-        if not isinstance(author, discord.Member) or author.bot:
+        if not isinstance(author, discord.Member) or author.bot or self.is_mod_or_superior(author):
             return
-
-        print("Success 3")
 
         await self.bot.delete_message(message)
 
         destination = discord.utils.get(server.channels, id=self.routes[server.id][message.channel.id])
 
-        return await self.bot.send_message(destination, message)
+        await self.bot.send_message(destination, "Report submitted by {}".format(message.author.mention))
+        return await self.bot.send_message(destination, message.content)
 
+    def is_mod_or_superior(self, user):
+        if user.id == settings.owner:
+            return True
+        elif discord.utils.get(user.roles, name=admin_role):
+            return True
+        elif discord.utils.get(user.roles, name=mod_role):
+            return True
+        else:
+            return False
 
 def setup(bot):
     check_folders()
