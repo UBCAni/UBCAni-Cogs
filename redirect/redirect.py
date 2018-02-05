@@ -31,7 +31,7 @@ class Redirect:
     async def redirect(self, ctx, src: discord.Channel, dst: discord.Channel):
         server = ctx.message.server
 
-        if self.routes[server.id] is None:
+        if server.id not in self.routes:
             self.routes[server.id] = {}
 
         self.routes[server.id][src.id] = dst.id
