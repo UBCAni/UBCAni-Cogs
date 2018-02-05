@@ -50,7 +50,7 @@ class Redirect:
 
         print("Success")
 
-        if server.id not in self.routes or message.channel.id not in self.routes[server.id].keys():
+        if server.id not in self.routes.keys() or message.channel.id not in self.routes[server.id].keys():
             return
 
         print("Success 2")
