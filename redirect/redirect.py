@@ -29,6 +29,7 @@ class Redirect:
     @commands.command(name="redirect", pass_context=True, no_pm=True)
     @checks.admin_or_permissions(manage_server=True)
     async def redirect(self, ctx, src: discord.Channel, dst: discord.Channel):
+        """Redirects messages from one channel to another"""
         server = ctx.message.server
 
         if server.id not in self.routes:
@@ -38,11 +39,13 @@ class Redirect:
 
         dataIO.save_json(self.file_path, self.routes)
 
-        return await self.bot.say(f"Redirecting messages from {0} to {1}".format(src.mention, dst.mention))
+        return await self.bot.say(f"Redirecting messages from {} to {}".format(src.mention, dst.mention))
 
     async def on_message(self, message):
         author = message.author
         server = message.server
+
+        print("Test")
 
         if server is None or self.bot.user == author:
             return
