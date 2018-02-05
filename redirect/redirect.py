@@ -45,6 +45,8 @@ class Redirect:
         author = message.author
         server = message.server
 
+        print(message)
+
         if server is None or self.bot.user == author:
             return
 
