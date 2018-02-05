@@ -48,9 +48,10 @@ class Redirect:
         if server is None or self.bot.user == author:
             return
 
-        print("Success")
+        print(server.id)
+        print(message.channel.id)
 
-        if server.id not in self.routes.keys() or message.channel.id not in self.routes[server.id].keys():
+        if server.id not in self.routes or message.channel.id not in self.routes[server.id]:
             return
 
         print("Success 2")
