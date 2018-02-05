@@ -63,6 +63,10 @@ class Redirect:
         return await self.bot.send_message(destination, message.content)
 
     def is_mod_or_superior(self, user):
+        server = user.server
+        admin_role = settings.get_server_admin(server)
+        mod_role = settings.get_server_mod(server)
+
         if user.id == settings.owner:
             return True
         elif discord.utils.get(user.roles, name=admin_role):
