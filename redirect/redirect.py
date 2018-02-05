@@ -39,7 +39,7 @@ class Redirect:
 
         dataIO.save_json(self.file_path, self.routes)
 
-        return await self.bot.say(f"Redirecting messages from {} to {}".format(src.mention, dst.mention))
+        return await self.bot.say("Redirecting messages from {} to {}".format(src.mention, dst.mention))
 
     async def on_message(self, message):
         author = message.author
