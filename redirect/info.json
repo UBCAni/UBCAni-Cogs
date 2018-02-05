@@ -1,0 +1,10 @@
+
+{
+    "AUTHOR" : "TwelveNights",
+    "SHORT" : "Redirect messages",
+    "DESCRIPTION" : "Sends messages from one channel to another",
+    "DISABLED" : false,
+    "NAME" : "redirect",
+    "TAGS" : ["utility"],
+    "INSTALL_MSG" : "Enjoy!"
+}
