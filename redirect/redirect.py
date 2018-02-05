@@ -45,19 +45,14 @@ class Redirect:
         author = message.author
         server = message.server
 
-        print("Test")
-
         if server is None or self.bot.user == author:
             return
 
         if server.id not in self.routes or message.channel.id not in self.routes[server.id]:
             return
 
-        valid_user = isinstance(author, discord.Member) and not author.bot
-
-        if not valid_user or self.is_mod_or_superior(message):
+        if not isinstance(author, discord.Member) or author.bot:
             return
-
 
         await self.bot.delete_message(message)
 
