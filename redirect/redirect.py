@@ -59,8 +59,7 @@ class Redirect:
 
         destination = discord.utils.get(server.channels, id=self.routes[server.id][message.channel.id])
 
-        await self.bot.send_message(destination, "Report submitted by {}".format(message.author.mention))
-        return await self.bot.send_message(destination, message.content)
+        return await self.bot.send_message(destination, "Report submitted by {}\n{}".format(message.author.mention, message.content))
 
     def is_mod_or_superior(self, user):
         server = user.server
