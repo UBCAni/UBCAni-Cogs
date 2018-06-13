@@ -34,11 +34,12 @@ class Compare:
 
     @compare.command(pass_context=True, no_pm=True)
     async def upload(self, ctx):
+        message = ctx.message
+
         if not self.api_defined():
             await self.bot.delete_message(message)
             return await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
 
-        message = ctx.message
         author = message.author
         attachments = message.attachments
 
@@ -104,11 +105,14 @@ class Compare:
     @compare.command(pass_context=True, no_pm=True)
     @checks.serverowner_or_permissions(administrator=True)
     async def api(self, ctx, endpoint: str = None):
-        if endpoint is None:
+        if not self.api_defined():
+            await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
+        elif endpoint is None:
             await self.bot.say("The current API endpoint is: {}".format(self.config["api"]))
         else:
             self.config["api"] = endpoint
             dataIO.save_json(self.file_path, self.config)
+            await self.bot.say("API endpoint set to {}".format(endpoint))
 
     def api_defined(self):
         return "api" in self.config
