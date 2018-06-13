@@ -105,14 +105,15 @@ class Compare:
     @compare.command(pass_context=True, no_pm=True)
     @checks.serverowner_or_permissions(administrator=True)
     async def api(self, ctx, endpoint: str = None):
-        if not self.api_defined():
-            await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
-        elif endpoint is None:
-            await self.bot.say("The current API endpoint is: {}".format(self.config["api"]))
-        else:
+        if endpoint is not None:
             self.config["api"] = endpoint
             dataIO.save_json(self.file_path, self.config)
             await self.bot.say("API endpoint set to {}".format(endpoint))
+        else:
+            if not self.api_defined():
+                await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
+            else:
+                await self.bot.say("The current API endpoint is: {}".format(self.config["api"]))
 
     def api_defined(self):
         return "api" in self.config
