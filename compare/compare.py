@@ -5,7 +5,7 @@ from discord.ext import commands
 from .utils.dataIO import dataIO
 from .utils import checks
 from __main__ import send_cmd_help
-from os import path
+import os
 
 def check_folders():
     if not os.path.exists("data/UBCAniCogs/compare"):
@@ -48,7 +48,7 @@ class Compare:
 
         attachment = attachments[0]
 
-        if path.splitext(attachment)[1] != ".ics":
+        if os.path.splitext(attachment)[1] != ".ics":
             await self.bot.delete_message(message)
             return await self.bot.say("Please upload a valid .ics file")
 
