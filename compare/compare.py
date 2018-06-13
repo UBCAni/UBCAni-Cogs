@@ -46,6 +46,7 @@ class Compare:
             return await self.bot.say("An attached schedule file (.ics) was expected")
 
         attachment = attachments[0]
+        print(attachment)
 
         if os.path.splitext(attachment.filename)[1] != ".ics":
             return await self.bot.say("Please upload a valid .ics file")
