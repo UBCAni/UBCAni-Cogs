@@ -90,11 +90,11 @@ class Compare:
                 errors = result.errors
                 if errors.user == author.id:
                     return await self.bot.say("Please first upload your schedule to the API by uploading your calendar file and including the comment `>compare upload`")
-                else if errors.user == user.id:
+                elif errors.user == user.id:
                     return await self.bot.say("{} {}".format(user.mention, errors.message))
                 else:
                     return await self.bot.say("An unknown issue occurred, try again later!")
-            else if resp.status == 200:
+            elif resp.status == 200:
                 same = result.same
                 await self.bot.say("Here are the classes that you have in common")
                 return await self.bot.say(same.join('\n'))
