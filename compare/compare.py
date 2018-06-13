@@ -46,12 +46,11 @@ class Compare:
             return await self.bot.say("An attached schedule file (.ics) was expected")
 
         attachment = attachments[0]
-        print(attachment)
 
-        if os.path.splitext(attachment.filename)[1] != ".ics":
+        if os.path.splitext(attachment["filename"])[1] != ".ics":
             return await self.bot.say("Please upload a valid .ics file")
 
-        async with aiohttp.get(attachment.proxy_url) as resp:
+        async with aiohttp.get(attachment["url"]) as resp:
             if resp.status != 200:
                 return await self.bot.say("An unknown issue occurred, try again later!")
             calendar = await resp.text()
