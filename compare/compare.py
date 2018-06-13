@@ -78,7 +78,7 @@ class Compare:
         # if author.id == user.id:
         #     return await self.bot.say("You're obvious going to be taking the same classes as yourself")
 
-        async with aiohttp.post("{}/compare".format(self.config["api"]), json={'user': author.id, 'other': user.id}) as resp:
+        async with aiohttp.post("{}/compare".format(self.config["api"]), data={'user': author.id, 'other': user.id}) as resp:
             result = await resp.json()
 
             if resp.status == 400:
