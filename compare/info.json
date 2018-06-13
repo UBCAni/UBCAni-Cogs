@@ -1,0 +1,10 @@
+
+{
+    "AUTHOR" : "TwelveNights",
+    "SHORT" : "Compares UBC schedules",
+    "DESCRIPTION" : "With the compare-api project, this allows people to see what courses they share with others",
+    "DISABLED" : false,
+    "NAME" : "compare",
+    "TAGS" : ["utility"],
+    "INSTALL_MSG" : "Enjoy!"
+}
