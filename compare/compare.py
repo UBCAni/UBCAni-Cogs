@@ -60,7 +60,7 @@ class Compare:
 
             payload = aiohttp.helpers.FormData()
             payload.add_field("user", author.id, content_type="text/plain")
-            payload.add_field("data", calendar, filename="ical.ics" content_type="text/calendar")
+            payload.add_field("data", calendar, filename="ical.ics", content_type="text/calendar")
 
             async with aiohttp.post("{}/upload".format(self.config["api"]), data=payload) as up:
                 if up.status != 200:
