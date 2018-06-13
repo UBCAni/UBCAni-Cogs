@@ -47,7 +47,7 @@ class Compare:
 
         attachment = attachments[0]
 
-        if os.path.splitext(attachment)[1] != ".ics":
+        if os.path.splitext(attachment.filename)[1] != ".ics":
             return await self.bot.say("Please upload a valid .ics file")
 
         async with aiohttp.get(attachment.proxy_url) as resp:
