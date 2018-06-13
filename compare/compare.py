@@ -82,15 +82,15 @@ class Compare:
             result = await resp.json()
 
             if resp.status == 400:
-                errors = result.errors
-                if errors.user == author.id:
+                errors = result["errors"]
+                if errors["user"] == author.id:
                     return await self.bot.say("Please first upload your schedule to the API by uploading your calendar file and including the comment `>compare upload`")
-                elif errors.user == user.id:
-                    return await self.bot.say("{} {}".format(user.mention, errors.message))
+                elif errors["user"] == user.id:
+                    return await self.bot.say("{} {}".format(user.mention, errors["message"]))
                 else:
                     return await self.bot.say("An unknown issue occurred, try again later!")
             elif resp.status == 200:
-                same = result.same
+                same = result["same"]
                 await self.bot.say("Here are the classes that you have in common")
                 return await self.bot.say(same.join('\n'))
             else:
