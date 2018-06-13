@@ -92,7 +92,7 @@ class Compare:
             elif resp.status == 200:
                 same = result["same"]
                 await self.bot.say("Here are the classes that you have in common")
-                return await self.bot.say(same.join('\n'))
+                return await self.bot.say(('\n').join(same))
             else:
                 return await self.bot.say("An unknown issue occurred, try again later!")
 
