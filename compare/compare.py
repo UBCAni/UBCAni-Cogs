@@ -37,25 +37,21 @@ class Compare:
         message = ctx.message
 
         if not self.api_defined():
-            await self.bot.delete_message(message)
             return await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
 
         author = message.author
         attachments = message.attachments
 
         if len(attachments) != 1:
-            await self.bot.delete_message(message)
             return await self.bot.say("An attached schedule file (.ics) was expected")
 
         attachment = attachments[0]
 
         if os.path.splitext(attachment)[1] != ".ics":
-            await self.bot.delete_message(message)
             return await self.bot.say("Please upload a valid .ics file")
 
         async with aiohttp.get(attachment.proxy_url) as resp:
             if resp.status != 200:
-                await self.bot.delete_message(message)
                 return await self.bot.say("An unknown issue occurred, try again later!")
             calendar = await resp.text()
 
@@ -65,10 +61,8 @@ class Compare:
 
             async with aiohttp.post("{}/upload".format(self.config["api"]), data=payload) as up:
                 if up.status != 200:
-                    await self.bot.delete_message(message)
                     return await self.bot.say("An unknown issue occurred, try again later!")
 
-                await self.bot.delete_message(message)
                 return await self.bot.say("Your schedule has been successfully been uploaded!")
 
 
