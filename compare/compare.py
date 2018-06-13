@@ -32,7 +32,7 @@ class Compare:
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
-    @commands.command(pass_context=True, no_pm=True)
+    @compare.command(pass_context=True, no_pm=True)
     async def upload(self, ctx):
         if not self.api_defined():
             await self.bot.delete_message(message)
@@ -71,7 +71,7 @@ class Compare:
                 return await self.bot.say("Your schedule has been successfully been uploaded!")
 
 
-    @commands.command(pass_context=True, no_pm=True)
+    @compare.command(pass_context=True, no_pm=True)
     async def same(self, ctx, user: discord.Member):
         if not self.api_defined():
             return await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
@@ -101,7 +101,7 @@ class Compare:
             else:
                 return await self.bot.say("An unknown issue occurred, try again later!")
 
-    @commands.command(pass_context=True, no_pm=True)
+    @compare.command(pass_context=True, no_pm=True)
     @checks.serverowner_or_permissions(administrator=True)
     async def api(self, ctx, endpoint: str = None):
         if endpoint is None:
