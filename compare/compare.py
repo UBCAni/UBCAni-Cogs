@@ -45,7 +45,7 @@ class Compare:
 
         if len(attachments) != 1:
             await self.bot.delete_message(message)
-            return await self.bot.say("A list of attachments was expected")
+            return await self.bot.say("An attached schedule file (.ics) was expected")
 
         attachment = attachments[0]
 
