@@ -50,6 +50,7 @@ class Compare:
         if os.path.splitext(attachment["filename"])[1] != ".ics":
             return await self.bot.say("Please upload a valid .ics file")
 
+        await self.bot.delete_message(message)
         async with aiohttp.get(attachment["url"]) as resp:
             if resp.status != 200:
                 return await self.bot.say("An unknown issue occurred, try again later!")
