@@ -92,7 +92,10 @@ class Compare:
                     return await self.bot.say("An unknown issue occurred, try again later!")
             elif resp.status == 200:
                 same = result["same"]
-                await self.bot.say("Here are the classes that you have in common")
+                if len(same) == 0:
+                    return await self.bot.say("You have no classes in common :aquacry:")
+
+                await self.bot.say("Here are the classes that you have in common:")
                 return await self.bot.say(('\n').join(same))
             else:
                 return await self.bot.say("An unknown issue occurred, try again later!")
