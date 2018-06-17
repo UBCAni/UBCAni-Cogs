@@ -134,8 +134,9 @@ class Compare:
                 start = result["start"]
                 end = result["end"]
                 blocks = result["blocks"]
+                await self.bot.say(result)
                 if start.startswith("00:00:00") and end.startswith("23:59:59"):
-                    return await self.bot.say("Neither of you have classes today; find a time to meetup!")
+                    return await self.bot.say("Neither of you have classes on {}; find a time to meetup!".format(weekday_name))
 
                 if len(blocks) == 0:
                     return await self.bot.say("There are no hour-long free blocks between your schedules. Try meeting before {} or after {}".format(start, end))
