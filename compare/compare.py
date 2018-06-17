@@ -34,6 +34,7 @@ class Compare:
 
     @compare.command(pass_context=True, no_pm=True)
     async def upload(self, ctx):
+        """Upload a new schedule to the server"""
         message = ctx.message
 
         if not self.api_defined():
@@ -69,6 +70,7 @@ class Compare:
 
     @compare.command(pass_context=True, no_pm=True)
     async def same(self, ctx, user: discord.Member):
+        """Check what classes you share with someone else"""
         if not self.api_defined():
             return await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
 
@@ -98,6 +100,7 @@ class Compare:
 
     @compare.command(pass_context=True, no_pm=True)
     async def free(self, ctx, weekday: int, user: discord.Member):
+        """Checks which free blocks you share with someone on a day of the week"""
         if not self.api_defined():
             return await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
 
@@ -117,7 +120,14 @@ class Compare:
 
             if resp.status == 400:
                 errors = result["errors"]
-                return await self.bot.say(errors["message"])
+                if errors["user"] == author.id:
+                    return await self.bot.say("Please first upload your schedule to the API by uploading your calendar file and including the comment `>compare upload`")
+                elif errors["user"] == user.id:
+                    return await self.bot.say("{} {}".format(user.mention, errors["message"]))
+                elif "message" in errors:
+                    return await self.bot.say(errors["message"])
+                else:
+                    return await self.bot.say("An unknown issue occurred, try again later!")
             elif resp.status == 200:
                 start = result["start"]
                 end = result["end"]
@@ -137,6 +147,7 @@ class Compare:
     @compare.command(pass_context=True, no_pm=True)
     @checks.serverowner_or_permissions(administrator=True)
     async def api(self, ctx, endpoint: str = None):
+        """Update the API endpoint"""
         if endpoint is not None:
             self.config["api"] = endpoint
             dataIO.save_json(self.file_path, self.config)
