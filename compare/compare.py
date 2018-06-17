@@ -54,7 +54,7 @@ class Compare:
         async with aiohttp.get(attachment["url"]) as resp:
             await self.bot.delete_message(message)
             if resp.status != 200:
-                return await self.bot.say("An unknown issue occurred, try again later!")
+                return await self.bot.say(await resp.text())
             calendar = await resp.text()
 
             payload = aiohttp.helpers.FormData()
@@ -63,7 +63,7 @@ class Compare:
 
             async with aiohttp.post("{}/upload".format(self.config["api"]), data=payload) as up:
                 if up.status != 200:
-                    return await self.bot.say("An unknown issue occurred, try again later!")
+                    return await self.bot.say(await resp.text())
 
                 return await self.bot.say("Your schedule has been successfully been uploaded!")
 
@@ -87,7 +87,7 @@ class Compare:
                 elif errors["user"] == user.id:
                     return await self.bot.say("{} {}".format(user.mention, errors["message"]))
                 else:
-                    return await self.bot.say("An unknown issue occurred, try again later!")
+                    return await self.bot.say(await resp.text())
             elif resp.status == 200:
                 same = result["result"]
                 if len(same) == 0:
@@ -96,7 +96,7 @@ class Compare:
                 await self.bot.say("Here are the classes that you have in common:")
                 return await self.bot.say('\n'.join(same))
             else:
-                return await self.bot.say("An unknown issue occurred, try again later!")
+                return await self.bot.say(await resp.text())
 
     @compare.command(pass_context=True, no_pm=True)
     async def free(self, ctx, weekday: int, user: discord.Member):
@@ -129,7 +129,7 @@ class Compare:
                 if "message" in errors:
                     return await self.bot.say(errors["message"])
 
-                return await self.bot.say("An unknown issue occurred, try again later!")
+                return await self.bot.say(await resp.text())
             elif resp.status == 200:
                 start = result["start"]
                 end = result["end"]
@@ -144,7 +144,7 @@ class Compare:
                 await self.bot.say('\n'.join(blocks))
                 return await self.bot.say("Also, you can try find a time before {} or after {}".format(start, end))
             else:
-                return await self.bot.say("An unknown issue occurred, try again later!")
+                return await self.bot.say(await resp.text())
 
     @compare.command(pass_context=True, no_pm=True)
     @checks.serverowner_or_permissions(administrator=True)
