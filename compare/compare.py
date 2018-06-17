@@ -114,7 +114,6 @@ class Compare:
         elif weekday == 5: weekday_name = "Friday"
         else: return await self.bot.say("Please specify the weekday as a number from 1-5 (starting from Monday)")
 
-
         async with aiohttp.post("{}/free".format(self.config["api"]), data={'user': author.id, 'other': user.id, 'weekday': weekday}) as resp:
             result = await resp.json()
 
@@ -134,7 +133,6 @@ class Compare:
                 start = result["start"]
                 end = result["end"]
                 blocks = result["blocks"]
-                await self.bot.say(result)
                 if start.startswith("00:00:00") and end.startswith("23:59:59"):
                     return await self.bot.say("Neither of you have classes on {}; find a time to meetup!".format(weekday_name))
 
