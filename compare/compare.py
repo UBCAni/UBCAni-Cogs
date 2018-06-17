@@ -134,7 +134,7 @@ class Compare:
                 start = result["start"]
                 end = result["end"]
                 blocks = result["blocks"]
-                if start == "00:00:00.000" and end == "23:59:59.999":
+                if start.startswith("00:00:00") and end.startswith("23:59:59"):
                     return await self.bot.say("Neither of you have classes today; find a time to meetup!")
 
                 if len(blocks) == 0:
