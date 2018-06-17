@@ -75,11 +75,7 @@ class Compare:
         message = ctx.message
         author = message.author
 
-        # Uncomment after proper testing
-        # if author.id == user.id:
-        #     return await self.bot.say("You're obvious going to be taking the same classes as yourself")
-
-        async with aiohttp.post("{}/compare".format(self.config["api"]), data={'user': author.id, 'other': user.id}) as resp:
+        async with aiohttp.post("{}/same".format(self.config["api"]), data={'user': author.id, 'other': user.id}) as resp:
             result = await resp.json()
 
             if resp.status == 400:
@@ -91,12 +87,50 @@ class Compare:
                 else:
                     return await self.bot.say("An unknown issue occurred, try again later!")
             elif resp.status == 200:
-                same = result["same"]
+                same = result["result"]
                 if len(same) == 0:
                     return await self.bot.say("You have no classes in common :aquacry:")
 
                 await self.bot.say("Here are the classes that you have in common:")
-                return await self.bot.say(('\n').join(same))
+                return await self.bot.say('\n'.join(same))
+            else:
+                return await self.bot.say("An unknown issue occurred, try again later!")
+
+    @compare.command(pass_context=True, no_pm=True)
+    async def free(self, ctx, weekday: int, user: discord.Member):
+        if not self.api_defined():
+            return await self.bot.say("The API endpoint is not defined. Please define it via `>compare api <endpoint>`")
+
+        message = ctx.message
+        author = message.author
+
+        if weekday == 1: weekday_name = "Monday"
+        elif weekday == 2: weekday_name = "Tuesday"
+        elif weekday == 3: weekday_name = "Wednesday"
+        elif weekday == 4: weekday_name = "Thursday"
+        elif weekday == 5: weekday_name = "Friday"
+        else: return await self.bot.say("Please specify the weekday as a number from 1-5 (starting from Monday)")
+
+
+        async with aiohttp.post("{}/free".format(self.config["api"]), data={'user': author.id, 'other:': user.id, 'weekday': weekday}) as resp:
+            result = await resp.json()
+
+            if resp.status == 400:
+                errors = result["errors"]
+                return await self.bot.say(errors["message"])
+            elif resp.status == 200:
+                start = result["start"]
+                end = result["end"]
+                blocks = result["blocks"]
+                if start == "00:00:00" and end == "23:59:59":
+                    return await self.bot.say("Neither of you have classes today; find a time to meetup!")
+
+                if len(blocks) == 0:
+                    return await self.bot.say("There are no hour-long free blocks between your schedules. Try meeting before {} or after {}".format(start, end))
+
+                await self.bot.say("Here are some times that might work for you:")
+                await self.bot.say('\n'.join(blocks))
+                return await self.bot.say("Also, you can try find a time before {} or after {}".format(start, end))
             else:
                 return await self.bot.say("An unknown issue occurred, try again later!")
 
