@@ -120,14 +120,16 @@ class Compare:
 
             if resp.status == 400:
                 errors = result["errors"]
-                if errors["user"] == author.id:
-                    return await self.bot.say("Please first upload your schedule to the API by uploading your calendar file and including the comment `>compare upload`")
-                elif errors["user"] == user.id:
-                    return await self.bot.say("{} {}".format(user.mention, errors["message"]))
-                elif "message" in errors:
+                if "user" in errors:
+                    if errors["user"] == author.id:
+                        return await self.bot.say("Please first upload your schedule to the API by uploading your calendar file and including the comment `>compare upload`")
+                    elif errors["user"] == user.id:
+                        return await self.bot.say("{} {}".format(user.mention, errors["message"]))
+
+                if "message" in errors:
                     return await self.bot.say(errors["message"])
-                else:
-                    return await self.bot.say("An unknown issue occurred, try again later!")
+
+                return await self.bot.say("An unknown issue occurred, try again later!")
             elif resp.status == 200:
                 start = result["start"]
                 end = result["end"]
