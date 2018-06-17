@@ -80,11 +80,6 @@ class Compare:
         async with aiohttp.post("{}/same".format(self.config["api"]), data={'user': author.id, 'other': user.id}) as resp:
             result = await resp.json()
 
-            await self.bot.say(resp.url)
-            await self.bot.say(resp.status)
-            await self.bot.say(resp.reason)
-            await self.bot.say(resp.content)
-
             if resp.status == 400:
                 errors = result["errors"]
                 if errors["user"] == author.id:
@@ -122,6 +117,11 @@ class Compare:
 
         async with aiohttp.post("{}/free".format(self.config["api"]), data={'user': author.id, 'other:': user.id, 'weekday': weekday}) as resp:
             result = await resp.json()
+
+            await self.bot.say(resp.url)
+            await self.bot.say(resp.status)
+            await self.bot.say(resp.reason)
+            await self.bot.say(resp.content)
 
             if resp.status == 400:
                 errors = result["errors"]
