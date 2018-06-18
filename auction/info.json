@@ -1,0 +1,10 @@
+
+{
+    "AUTHOR" : "TwelveNights",
+    "SHORT" : "Handles auctioning logic",
+    "DESCRIPTION" : "This hooks into the economy system to make auctioning happen",
+    "DISABLED" : false,
+    "NAME" : "auction",
+    "TAGS" : ["utility"],
+    "INSTALL_MSG" : "Enjoy!"
+}
