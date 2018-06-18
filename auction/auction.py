@@ -55,9 +55,9 @@ class Auction:
             if amount < 0:
                 if user.id not in server_data or author.id not in server_data[user.id]:
                     if user.id == author.id:
-                        return await self.bot.say("You have not bidded on behalf of yourself")
+                        return await self.bot.say("You have not bid on behalf of yourself")
                     else:
-                        return await self.bot.say("You have not bidded on behalf of the other user")
+                        return await self.bot.say("You have not bid on behalf of the other user")
 
                 removed_amount = abs(amount)
                 if removed_amount > server_data[user.id][author.id]:
@@ -78,7 +78,7 @@ class Auction:
                 if author.id not in server_data[user.id]:
                     server_data[user.id][author.id] = 0
 
-                server_data[user.id][author.id] = amount
+                server_data[user.id][author.id] += amount
                 bank.withdraw_credits(author, amount)
 
                 dataIO.save_json(self.file_path, server_data)
@@ -158,7 +158,6 @@ class Auction:
     @auction.command(name="raise", pass_context=True, no_pm=True)
     async def raise_bid(self, ctx, amount = 100, user : discord.Member = None):
         """Raises the bid on either the specified user or the author to the current highest bid, plus some"""
-
         author = ctx.message.author
         server = ctx.message.server
         bank = self.bot.get_cog("Economy").bank
@@ -187,8 +186,43 @@ class Auction:
 
         delta = raise_from - sum(self.data[server.id][user.id].values()) + amount
 
-        # TODO: bank logic
-        return
+        if bank.account_exists(author):
+            server_data = self.data[server.id]
+
+            if delta < 0:
+                if user.id not in server_data or author.id not in server_data[user.id]:
+                    if user.id == author.id:
+                        return await self.bot.say("You have not bid on behalf of yourself")
+                    else:
+                        return await self.bot.say("You have not bid on behalf of the other user")
+
+                removed_amount = abs(delta)
+                if removed_amount > server_data[user.id][author.id]:
+                    return await self.bot.say("You cannot decrease your bid by more than {} credits".format(server_data[user.id][author.id]))
+
+                server_data[user.id][author.id] -= removed_amount
+                bank.deposit_credits(author, removed_amount)
+
+                dataIO.save_json(self.file_path, server_data)
+
+                return await self.bot.say("{} credits removed from the bid. The total bid pool is now {}".format(removed_amount, sum(server_data[user.id].values())))
+            else:
+                if not bank.can_spend(author, delta):
+                    return await self.bot.say("Your bank account has insufficient funds")
+
+                if user.id not in server_data:
+                    server_data[user.id] = {}
+                if author.id not in server_data[user.id]:
+                    server_data[user.id][author.id] = 0
+
+                server_data[user.id][author.id] += delta
+                bank.withdraw_credits(author, delta)
+
+                dataIO.save_json(self.file_path, server_data)
+
+                return await self.bot.say("{} credits added to the bid. The total bid pool is now {}".format(delta, sum(server_data[user.id].values())))
+        else:
+            return await self.bot.say("Your bank account has insufficient funds")
 
     def _reset(self, server, user):
         """Resets all of the user's bids on others to 0, and returns a dictionary where the keys are the original users and the values are the removed amounts"""
@@ -197,7 +231,7 @@ class Auction:
         return {}
 
     def _get_bids(self, server, user):
-        """Retrieves a dict of bids placed by the user, wher the key is on who and the value is the amount bidded"""
+        """Retrieves a dict of bids placed by the user, where the key is on who and the value is the amount bid"""
 
         # TODO
         return {}
