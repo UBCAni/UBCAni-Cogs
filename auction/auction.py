@@ -29,7 +29,7 @@ class Auction:
     async def auction(self, ctx):
         """Auctioning group of commands"""
         if ctx.invoked_subcommand is None:
-        await send_cmd_help(ctx)
+            await send_cmd_help(ctx)
 
     @auction.command(pass_context=True, no_pm=True)
     async def bid(self, ctx, amount : int, user : discord.Member = None):
