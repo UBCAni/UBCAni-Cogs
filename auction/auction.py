@@ -152,8 +152,15 @@ class Auction:
 
         leaderboard = self._get_leaderboard(server.id)
 
-        # TODO
-        pass
+        if len(leaderboard) == 0:
+            return await self.bot.say("The leaderboard is empty")
+
+        rank = 1
+        for key, value in leaderboard.items():
+            member = discord.utils.get(ctx.message.server.members, id=key)
+            results.append("{}. {}: {}".format(rank++, member.name, value))
+
+        await self.bot.say("```\n{}\n```".format('\n'.join(results)))
 
     @auction.command(name="raise", pass_context=True, no_pm=True)
     async def raise_bid(self, ctx, amount = 100, user : discord.Member = None):
@@ -216,11 +223,17 @@ class Auction:
                 
         return ret
 
-    def _get_leaderboard(self, server, limit = 5):
+    def _get_leaderboard(self, server_id, limit = 5):
         """Retrieves a sorted list of tuples (member id, amount) to show users with the highest bids so far"""
 
-        # TODO
-        return []
+        server_data = self.data[server_id]
+
+        for user_bid_on in server_data:
+            server_data[user_bid_on] = sum(server_data[user_bid_on].values())
+
+        scores = sorted(server_data.items(), key=operator.itemgetter(1))
+        
+        return scores[:-6:-1]
 
 
 def setup(bot):
