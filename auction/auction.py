@@ -127,7 +127,7 @@ class Auction:
             self.data[server.id] = {}
             dataIO.save_json(self.file_path, self.data)
 
-        returned_amounts = self._reset(server.id, ctx.author.id)
+        returned_amounts = self._reset(server.id, ctx.message.author.id)
 
         if len(returned_amounts) == 0:
             return await self.bot.say("No bids were placed, so nothing was withdrawn for you")
