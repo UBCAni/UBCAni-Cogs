@@ -180,16 +180,16 @@ class Auction:
         server = ctx.message.server
         bank = self.bot.get_cog("Economy").bank
 
+        if user is None:
+            user = author
+
         if server.id not in self.data:
             self.data[server.id] = {}
-            dataIO.save_json(self.file_path, self.data)
-
+            dataIO.save_json(self.file_path, self.data
+                             
         if user.id not in self.data[server.id]:
             self.data[server.id][user.id] = {}
             dataIO.save_json(self.file_path, self.data)
-
-        if user is None:
-            user = author
 
         leaderboard = self._get_leaderboard(server)
 
