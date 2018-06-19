@@ -42,6 +42,8 @@ class Auction:
         self.data["open"] = True
         dataIO.save_json(self.file_path, self.data)
 
+        await self.bot.say("The auction is now open")
+
     @auction.command(pass_context=True, no_pm=True)
     @checks.admin_or_permissions(manage_server=True)
     async def close(self, ctx):
@@ -51,6 +53,8 @@ class Auction:
 
         self.data["open"] = False
         dataIO.save_json(self.file_path, self.data)
+
+        await self.bot.say("The auction is now closed")
 
     @auction.command(pass_context=True, no_pm=True)
     async def bid(self, ctx, amount : int, user : discord.Member = None):
@@ -232,7 +236,7 @@ class Auction:
             dataIO.save_json(self.file_path, self.data)
 
         if not self.data["open"]:
-            await self.bot.say("The auction is not open currently")
+            await self.bot.say("The auction is currently not open")
 
         return self.data["open"]
 
