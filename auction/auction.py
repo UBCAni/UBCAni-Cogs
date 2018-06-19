@@ -157,7 +157,7 @@ class Auction:
             return await self.bot.say("The leaderboard is empty")
 
         rank = 0
-        for key, value in leaderboard.items():
+        for (key, value) in leaderboard:
             rank += 1
             member = discord.utils.get(ctx.message.server.members, id=key)
             results.append("{}. {}: {}".format(rank, member.name, value))
@@ -202,8 +202,8 @@ class Auction:
         server_data = self.data[server.id]
 
         for user_bid_on, amounts in server_data.items():
-            if user.id in server_data[user_bid_on]:
-                del server_data[user_bid_on][user.id]
+            if user.id in amounts:
+                del amounts[user.id]
                 bank.deposit_credits(user, bids[user_bid_on])
 
         return bids
@@ -216,8 +216,8 @@ class Auction:
         ret = {}
 
         for user_bid_on, amounts in server_data.items():
-            if user.id in server_data[user_bid_on]:
-                ret[user_bid_on] = server_data[user_bid_on][user.id]
+            if user.id in amounts:
+                ret[user_bid_on] = amounts[user.id]
 
         return ret
 
@@ -226,10 +226,12 @@ class Auction:
 
         server_data = self.data[server.id]
 
-        for user_bid_on in server_data.items():
-            server_data[user_bid_on] = sum(server_data[user_bid_on].values())
+        ret = {}
 
-        scores = sorted(server_data.items(), key=operator.itemgetter(1), reverse=True)
+        for user_bid_on, amounts in server_data.items():
+            ret[user_bid_on] = sum(amounts.values())
+
+        scores = sorted(ret.items(), key=operator.itemgetter(1), reverse=True)
 
         return scores[:limit]
 
