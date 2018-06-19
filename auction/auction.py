@@ -115,7 +115,7 @@ class Auction:
 
         results = []
 
-        for key, value in returned_amounts.items():
+        for key, value in bids.items():
             member = discord.utils.get(ctx.message.server.members, id=key)
             results.append("{}: {}".format(member.name, value))
 
