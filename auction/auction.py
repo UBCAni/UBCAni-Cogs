@@ -236,12 +236,16 @@ class Auction:
         
         server = ctx.message.server
 
+        if user is None:
+            user = author
+
         if server.id not in self.data:
             self.data[server.id][user.id] = {}
             dataIO.save_json(self.file_path, self.data)
 
-        if user is None:
-            user = author
+        if user.id not in self.data[server.id]:
+            self.data[server.id][user.id] = {}
+            dataIO.save_json(self.file_path, self.data)
 
         server_data = self.data[server.id]
 
