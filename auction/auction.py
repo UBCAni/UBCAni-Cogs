@@ -202,11 +202,11 @@ class Auction:
         bids = self._get_bids(server_id, user_id)
 
         server_data = self.data[server_id]
+        member = discord.utils.get(ctx.message.server.members, id=user_id)
 
-        for user_bid_on, amounts in server_data:
+        for user_bid_on, amounts in server_data.items():
             if user_id in server_data[user_bid_on]:
                 del server_data[user_bid_on][user_id]
-                member = discord.utils.get(ctx.message.server.members, id=user_id)
                 bank.deposit_credits(member, bids[user_bid_on])
 
         return bids
@@ -221,7 +221,7 @@ class Auction:
         for user_bid_on, amounts in server_data.items():
             if user_id in server_data[user_bid_on]:
                 ret[user_bid_on] = server_data[user_bid_on][user_id]
-                
+
         return ret
 
     def _get_leaderboard(self, server_id, limit = 5):
@@ -229,11 +229,11 @@ class Auction:
 
         server_data = self.data[server_id]
 
-        for user_bid_on in server_data:
+        for user_bid_on in server_data.items():
             server_data[user_bid_on] = sum(server_data[user_bid_on].values())
 
         scores = sorted(server_data.items(), key=operator.itemgetter(1))
-        
+
         return scores[:(limit+1)*-1:-1]
 
 
