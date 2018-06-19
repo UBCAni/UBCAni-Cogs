@@ -297,14 +297,9 @@ class Auction:
 
             accs = bank.get_server_accounts(server)
             for acc in accs:
-                
-                await self.bot.say("\nID: {}".format(acc.id))
-
                 member = discord.utils.get(ctx.message.server.members, id=acc.id)
-
-                await self.bot.say("\nmember name: {}".format(member.name))
-
-                
+                if member == None:
+                    continue
                 bank.deposit_credits(member, amount)
                 results.append("{}: {}".format(member.name, amount))
 
