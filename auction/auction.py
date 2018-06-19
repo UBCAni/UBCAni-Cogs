@@ -35,6 +35,7 @@ class Auction:
     @auction.command(pass_context=True, no_pm=True)
     @checks.admin_or_permissions(manage_server=True)
     async def open(self, ctx):
+        """Opens the auction"""
         if "open" not in self.data:
             self.data["open"] = True
 
@@ -44,6 +45,7 @@ class Auction:
     @auction.command(pass_context=True, no_pm=True)
     @checks.admin_or_permissions(manage_server=True)
     async def close(self, ctx):
+        """Closes the auction"""
         if "open" not in self.data:
             self.data["open"] = False
 
