@@ -137,7 +137,7 @@ class Auction:
 
         for key, value in returned_amounts.items():
             member = discord.utils.get(ctx.message.server.members, id=key)
-            results.append("{} credits withdrawn from {}'s bid".format(value, member.name))
+            results.append("{} credits withdrawn from bid on {}".format(value, member.name))
 
         await self.bot.say("```\n{}\n```".format('\n'.join(results)))
 
@@ -186,55 +186,35 @@ class Auction:
 
         delta = raise_from - sum(self.data[server.id][user.id].values()) + amount
 
-        if bank.account_exists(author):
-            server_data = self.data[server.id]
+        self.bid(ctx, delta, user)
 
-            if delta < 0:
-                if user.id not in server_data or author.id not in server_data[user.id]:
-                    if user.id == author.id:
-                        return await self.bot.say("You have not bid on behalf of yourself")
-                    else:
-                        return await self.bot.say("You have not bid on behalf of the other user")
-
-                removed_amount = abs(delta)
-                if removed_amount > server_data[user.id][author.id]:
-                    return await self.bot.say("You cannot decrease your bid by more than {} credits".format(server_data[user.id][author.id]))
-
-                server_data[user.id][author.id] -= removed_amount
-                bank.deposit_credits(author, removed_amount)
-
-                dataIO.save_json(self.file_path, server_data)
-
-                return await self.bot.say("{} credits removed from the bid. The total bid pool is now {}".format(removed_amount, sum(server_data[user.id].values())))
-            else:
-                if not bank.can_spend(author, delta):
-                    return await self.bot.say("Your bank account has insufficient funds")
-
-                if user.id not in server_data:
-                    server_data[user.id] = {}
-                if author.id not in server_data[user.id]:
-                    server_data[user.id][author.id] = 0
-
-                server_data[user.id][author.id] += delta
-                bank.withdraw_credits(author, delta)
-
-                dataIO.save_json(self.file_path, server_data)
-
-                return await self.bot.say("{} credits added to the bid. The total bid pool is now {}".format(delta, sum(server_data[user.id].values())))
-        else:
-            return await self.bot.say("Your bank account has insufficient funds")
-
-    def _reset(self, server, user):
+    def _reset(self, server_id, user_id):
         """Resets all of the user's bids on others to 0, and returns a dictionary where the keys are the original users and the values are the removed amounts"""
 
-        # TODO
-        return {}
+        bids = self._get_bids(server_id, user_id)
 
-    def _get_bids(self, server, user):
+        server_data = self.data[server_id]
+
+        for user_bid_on, amounts in server_data:
+            if user_id in server_data[user_bid_on]:
+                del server_data[user_bid_on][user_id]
+                member = discord.utils.get(ctx.message.server.members, id=user_id)
+                bank.deposit_credits(member, bids[user_bid_on])
+
+        return bids
+
+    def _get_bids(self, server_id, user_id):
         """Retrieves a dict of bids placed by the user, where the key is on who and the value is the amount bid"""
 
-        # TODO
-        return {}
+        server_data = self.data[server_id]
+
+        ret = {}
+
+        for user_bid_on, amounts in server_data.items():
+            if user_id in server_data[user_bid_on]:
+                ret[user_bid_on] = server_data[user_bid_on][user_id]
+                
+        return ret
 
     def _get_leaderboard(self, server, limit = 5):
         """Retrieves a sorted list of tuples (member id, amount) to show users with the highest bids so far"""
