@@ -277,7 +277,7 @@ class Auction:
                 self.data[server.id][user.id] = {}
                 dataIO.save_json(self.file_path, self.data)
 
-            amount = bank.get_balance(user)
+            amount = bank.get_balance(author)
 
             await self._bid(ctx, amount, user)
         
