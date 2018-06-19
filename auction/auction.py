@@ -280,6 +280,28 @@ class Auction:
             amount = bank.get_balance(author)
 
             await self._bid(ctx, amount, user)
+
+    @auction.command(pass_context=True, no_pm=True)
+    @checks.admin_or_permissions(manage_server=True)
+    async def ubi(self, ctx, amount = 50000):
+        if await self._is_open(ctx):
+            author = ctx.message.author
+            server = ctx.message.server
+            bank = self.bot.get_cog("Economy").bank
+
+            if server.id not in self.data:
+                self.data[server.id] = {}
+                dataIO.save_json(self.file_path, self.data)
+
+            results = []
+
+            accs = bank.get_server_accounts(server)
+            for acc in accs:
+                member = discord.utils.get(ctx.message.server.members, id=acc.id)
+                bank.deposit_credits(member, amount)
+                results.append("{}: {}".format(member.name, amount))
+
+            await self.bot.say("```\n{}\n```".format('\n'.join(results)))
         
     async def _is_open(self, ctx):
         if "open" not in self.data:
