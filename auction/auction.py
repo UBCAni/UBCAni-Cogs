@@ -230,6 +230,49 @@ class Auction:
 
             await self._bid(ctx, delta, user)
 
+    @auction.command(pass_context=True, no_pm=True)
+    async def bidders(self, ctx, user : discord.Member = None):
+        """Shows the current top 5 bidders"""
+        
+        server = ctx.message.server
+
+        if server.id not in self.data:
+            self.data[server.id] = {}
+            dataIO.save_json(self.file_path, self.data)
+
+        if user is None:
+            user = author
+
+        bidders = server[user.id]
+
+        for (key, value) in bidders:
+            member = discord.utils.get(ctx.message.server.members, id=key)
+            results.append("{}. {}: {}".format(rank, member.name, value))
+
+        await self.bot.say("```\n{}\n```".format('\n'.join(results)))
+
+    @auction.command(pass_context=True, no_pm=True)
+    async def allin(self, ctx, user : discord.Member = None):
+        if await self._is_open(ctx):
+            author = ctx.message.author
+            server = ctx.message.server
+            bank = self.bot.get_cog("Economy").bank
+
+            if user is None:
+                user = author
+
+            if server.id not in self.data:
+                self.data[server.id] = {}
+                dataIO.save_json(self.file_path, self.data)
+
+            if user.id not in self.data[server.id]:
+                self.data[server.id][user.id] = {}
+                dataIO.save_json(self.file_path, self.data)
+
+            amount = bank.get_balance(user)
+
+            await self._bid(ctx, amount, user)
+        
     async def _is_open(self, ctx):
         if "open" not in self.data:
             self.data["open"] = False
