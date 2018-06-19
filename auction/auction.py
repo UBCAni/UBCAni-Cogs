@@ -70,7 +70,7 @@ class Auction:
                 server_data[user.id][author.id] -= removed_amount
                 bank.deposit_credits(author, removed_amount)
 
-                dataIO.save_json(self.file_path, server_data)
+                dataIO.save_json(self.file_path, self.data)
 
                 return await self.bot.say("{} credits removed from the bid. The total bid pool is now {}".format(removed_amount, sum(server_data[user.id].values())))
             else:
@@ -85,7 +85,7 @@ class Auction:
                 server_data[user.id][author.id] += amount
                 bank.withdraw_credits(author, amount)
 
-                dataIO.save_json(self.file_path, server_data)
+                dataIO.save_json(self.file_path, self.data)
 
                 return await self.bot.say("{} credits added to the bid. The total bid pool is now {}".format(amount, sum(server_data[user.id].values())))
         else:
@@ -145,6 +145,7 @@ class Auction:
             results.append("{} credits withdrawn from bid on {}".format(value, member.name))
             bank.deposit_credits(user, value)
 
+        dataIO.save_json(self.file_path, self.data)
         await self.bot.say("```\n{}\n```".format('\n'.join(results)))
 
     @auction.command(pass_context=True, no_pm=True)
