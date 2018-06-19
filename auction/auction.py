@@ -36,7 +36,7 @@ class Auction:
     async def bid(self, ctx, amount : int, user : discord.Member = None):
         self._bid(ctx, amount, user)
 
-    async def _bid(self, ctx, amount, user):
+    def _bid(self, ctx, amount, user):
         """Place a bid on another user"""
 
         author = ctx.message.author
