@@ -237,17 +237,19 @@ class Auction:
         server = ctx.message.server
 
         if server.id not in self.data:
-            self.data[server.id] = {}
+            self.data[server.id][user.id] = {}
             dataIO.save_json(self.file_path, self.data)
 
         if user is None:
             user = author
 
-        bidders = server[user.id]
+        server_data = self.data[server.id]
 
-        for (key, value) in bidders:
+        bidders = server_data[user.id]
+
+        for (key, value) in bidders.items():
             member = discord.utils.get(ctx.message.server.members, id=key)
-            results.append("{}. {}: {}".format(rank, member.name, value))
+            results.append("{}: {}".format(member.name, value))
 
         await self.bot.say("```\n{}\n```".format('\n'.join(results)))
 
