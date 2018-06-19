@@ -1,5 +1,6 @@
 import aiohttp
 import discord
+import operator
 
 from discord.ext import commands
 from .utils.dataIO import dataIO
