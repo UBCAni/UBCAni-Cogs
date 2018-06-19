@@ -282,6 +282,7 @@ class Auction:
             await self._bid(ctx, amount, user)
 
     @auction.command(pass_context=True, no_pm=True)
+    @checks.admin_or_permissions(manage_server=True)
     async def ubi(self, ctx, amount = 50000):
         if await self._is_open(ctx):
             author = ctx.message.author
