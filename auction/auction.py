@@ -34,6 +34,9 @@ class Auction:
 
     @auction.command(pass_context=True, no_pm=True)
     async def bid(self, ctx, amount : int, user : discord.Member = None):
+        self._bid(ctx, amount, user)
+
+    async def _bid(self, ctx, amount, user):
         """Place a bid on another user"""
 
         author = ctx.message.author
@@ -192,7 +195,7 @@ class Auction:
 
         delta = raise_from - sum(self.data[server.id][user.id].values()) + amount
 
-        self.bid(ctx, delta, user)
+        self._bid(ctx, delta, user)
 
     def _reset(self, server, user):
         """Resets all of the user's bids on others to 0, and returns a dictionary where the keys are the original users and the values are the removed amounts"""
