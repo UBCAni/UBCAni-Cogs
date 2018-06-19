@@ -155,10 +155,11 @@ class Auction:
         if len(leaderboard) == 0:
             return await self.bot.say("The leaderboard is empty")
 
-        rank = 1
+        rank = 0
         for key, value in leaderboard.items():
+            rank += 1
             member = discord.utils.get(ctx.message.server.members, id=key)
-            results.append("{}. {}: {}".format(rank++, member.name, value))
+            results.append("{}. {}: {}".format(rank, member.name, value))
 
         await self.bot.say("```\n{}\n```".format('\n'.join(results)))
 
