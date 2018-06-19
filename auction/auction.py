@@ -180,10 +180,7 @@ class Auction:
 
         if user is None:
             user = author
-
-        if amount < 100:
-            return await self.bot.say("You may only raise values of 100 or more")
-
+            
         leaderboard = self._get_leaderboard(server.id)
 
         raise_from = 0
@@ -232,9 +229,9 @@ class Auction:
         for user_bid_on in server_data.items():
             server_data[user_bid_on] = sum(server_data[user_bid_on].values())
 
-        scores = sorted(server_data.items(), key=operator.itemgetter(1))
+        scores = sorted(server_data.items(), key=operator.itemgetter(1), reverse=True)
 
-        return scores[:(limit+1)*-1:-1]
+        return scores[:limit]
 
 
 def setup(bot):
