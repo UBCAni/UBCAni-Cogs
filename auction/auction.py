@@ -160,6 +160,8 @@ class Auction:
             return await self.bot.say("The leaderboard is empty")
 
         rank = 0
+        results = []
+
         for (key, value) in leaderboard:
             rank += 1
             member = discord.utils.get(ctx.message.server.members, id=key)
