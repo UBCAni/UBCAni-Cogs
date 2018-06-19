@@ -34,10 +34,10 @@ class Auction:
 
     @auction.command(pass_context=True, no_pm=True)
     async def bid(self, ctx, amount : int, user : discord.Member = None):
+        """Place a bid on another user"""
         await self._bid(ctx, amount, user)
 
     async def _bid(self, ctx, amount, user):
-        """Place a bid on another user"""
 
         author = ctx.message.author
         server = ctx.message.server
