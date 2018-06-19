@@ -251,6 +251,8 @@ class Auction:
 
         bidders = server_data[user.id]
 
+        results = []
+
         for (key, value) in bidders.items():
             member = discord.utils.get(ctx.message.server.members, id=key)
             results.append("{}: {}".format(member.name, value))
