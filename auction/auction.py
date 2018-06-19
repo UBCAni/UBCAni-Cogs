@@ -33,9 +33,28 @@ class Auction:
             await send_cmd_help(ctx)
 
     @auction.command(pass_context=True, no_pm=True)
+    @checks.admin_or_permissions(manage_server=True)
+    async def open(self, ctx):
+        if "open" not in self.data:
+            self.data["open"] = True
+
+        self.data["open"] = True
+        dataIO.save_json(self.file_path, self.data)
+
+    @auction.command(pass_context=True, no_pm=True)
+    @checks.admin_or_permissions(manage_server=True)
+    async def close(self, ctx):
+        if "open" not in self.data:
+            self.data["open"] = False
+
+        self.data["open"] = False
+        dataIO.save_json(self.file_path, self.data)
+
+    @auction.command(pass_context=True, no_pm=True)
     async def bid(self, ctx, amount : int, user : discord.Member = None):
         """Place a bid on another user"""
-        await self._bid(ctx, amount, user)
+        if await self._is_open(ctx):
+            await self._bid(ctx, amount, user)
 
     async def _bid(self, ctx, amount, user):
 
@@ -124,30 +143,31 @@ class Auction:
     @auction.command(pass_context=True, no_pm=True)
     async def resetbid(self, ctx):
         """Resets all bids made by the current user, returning all the credits to the bank"""
-        server = ctx.message.server
-        author = ctx.message.author
-        bank = self.bot.get_cog("Economy").bank
+        if await self._is_open(ctx):
+            server = ctx.message.server
+            author = ctx.message.author
+            bank = self.bot.get_cog("Economy").bank
 
-        if server.id not in self.data:
-            self.data[server.id] = {}
+            if server.id not in self.data:
+                self.data[server.id] = {}
+                dataIO.save_json(self.file_path, self.data)
+
+            returned_amounts = self._reset(server, ctx.message.author)
+
+            if len(returned_amounts) == 0:
+                return await self.bot.say("No bids were placed, so nothing was withdrawn for you")
+
+            await self.bot.say("The total amount withdrawn is {}".format(sum(returned_amounts.values())))
+
+            results = []
+
+            for key, value in returned_amounts.items():
+                member = discord.utils.get(ctx.message.server.members, id=key)
+                results.append("{} credits withdrawn from bid on {}".format(value, member.name))
+                bank.deposit_credits(author, value)
+
             dataIO.save_json(self.file_path, self.data)
-
-        returned_amounts = self._reset(server, ctx.message.author)
-
-        if len(returned_amounts) == 0:
-            return await self.bot.say("No bids were placed, so nothing was withdrawn for you")
-
-        await self.bot.say("The total amount withdrawn is {}".format(sum(returned_amounts.values())))
-
-        results = []
-
-        for key, value in returned_amounts.items():
-            member = discord.utils.get(ctx.message.server.members, id=key)
-            results.append("{} credits withdrawn from bid on {}".format(value, member.name))
-            bank.deposit_credits(author, value)
-
-        dataIO.save_json(self.file_path, self.data)
-        await self.bot.say("```\n{}\n```".format('\n'.join(results)))
+            await self.bot.say("```\n{}\n```".format('\n'.join(results)))
 
     @auction.command(pass_context=True, no_pm=True)
     async def score(self, ctx):
@@ -176,32 +196,43 @@ class Auction:
     @auction.command(name="raise", pass_context=True, no_pm=True)
     async def raise_bid(self, ctx, amount = 100, user : discord.Member = None):
         """Raises the bid on either the specified user or the author to the current highest bid, plus some"""
-        author = ctx.message.author
-        server = ctx.message.server
-        bank = self.bot.get_cog("Economy").bank
+        if await self._is_open(ctx):
+            author = ctx.message.author
+            server = ctx.message.server
+            bank = self.bot.get_cog("Economy").bank
 
-        if user is None:
-            user = author
+            if user is None:
+                user = author
 
-        if server.id not in self.data:
-            self.data[server.id] = {}
+            if server.id not in self.data:
+                self.data[server.id] = {}
+                dataIO.save_json(self.file_path, self.data)
+
+            if user.id not in self.data[server.id]:
+                self.data[server.id][user.id] = {}
+                dataIO.save_json(self.file_path, self.data)
+
+            leaderboard = self._get_leaderboard(server)
+
+            raise_from = 0
+
+            if len(leaderboard) != 0:
+                (member, top) = leaderboard[0]
+                raise_from = top
+
+            delta = raise_from - sum(self.data[server.id][user.id].values()) + amount
+
+            await self._bid(ctx, delta, user)
+
+    async def _is_open(self, ctx):
+        if "open" not in self.data:
+            self.data["open"] = False
             dataIO.save_json(self.file_path, self.data)
 
-        if user.id not in self.data[server.id]:
-            self.data[server.id][user.id] = {}
-            dataIO.save_json(self.file_path, self.data)
+        if not self.data["open"]:
+            await self.bot.say("The auction is not open currently")
 
-        leaderboard = self._get_leaderboard(server)
-
-        raise_from = 0
-
-        if len(leaderboard) != 0:
-            (member, top) = leaderboard[0]
-            raise_from = top
-
-        delta = raise_from - sum(self.data[server.id][user.id].values()) + amount
-
-        await self._bid(ctx, delta, user)
+        return self.data["open"]
 
     def _reset(self, server, user):
         """Resets all of the user's bids on others to 0, and returns a dictionary where the keys are the original users and the values are the removed amounts"""
