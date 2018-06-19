@@ -102,7 +102,7 @@ class Auction:
         if user is None:
             user = author
 
-        bids = self._get_bids(server.id, user.id)
+        bids = self._get_bids(server, user)
 
         if len(bids) == 0:
             if author.id == user.id:
@@ -127,7 +127,7 @@ class Auction:
             self.data[server.id] = {}
             dataIO.save_json(self.file_path, self.data)
 
-        returned_amounts = self._reset(server.id, ctx.message.author.id)
+        returned_amounts = self._reset(server, ctx.message.author)
 
         if len(returned_amounts) == 0:
             return await self.bot.say("No bids were placed, so nothing was withdrawn for you")
@@ -151,7 +151,7 @@ class Auction:
             self.data[server.id] = {}
             dataIO.save_json(self.file_path, self.data)
 
-        leaderboard = self._get_leaderboard(server.id)
+        leaderboard = self._get_leaderboard(server)
 
         if len(leaderboard) == 0:
             return await self.bot.say("The leaderboard is empty")
@@ -181,8 +181,8 @@ class Auction:
 
         if user is None:
             user = author
-            
-        leaderboard = self._get_leaderboard(server.id)
+
+        leaderboard = self._get_leaderboard(server)
 
         raise_from = 0
 
@@ -194,38 +194,37 @@ class Auction:
 
         self.bid(ctx, delta, user)
 
-    def _reset(self, server_id, user_id):
+    def _reset(self, server, user):
         """Resets all of the user's bids on others to 0, and returns a dictionary where the keys are the original users and the values are the removed amounts"""
 
-        bids = self._get_bids(server_id, user_id)
+        bids = self._get_bids(server, user)
 
-        server_data = self.data[server_id]
-        member = discord.utils.get(ctx.message.server.members, id=user_id)
+        server_data = self.data[server.id]
 
         for user_bid_on, amounts in server_data.items():
-            if user_id in server_data[user_bid_on]:
-                del server_data[user_bid_on][user_id]
-                bank.deposit_credits(member, bids[user_bid_on])
+            if user.id in server_data[user_bid_on]:
+                del server_data[user_bid_on][user.id]
+                bank.deposit_credits(user, bids[user_bid_on])
 
         return bids
 
-    def _get_bids(self, server_id, user_id):
+    def _get_bids(self, server, user):
         """Retrieves a dict of bids placed by the user, where the key is on who and the value is the amount bid"""
 
-        server_data = self.data[server_id]
+        server_data = self.data[server.id]
 
         ret = {}
 
         for user_bid_on, amounts in server_data.items():
-            if user_id in server_data[user_bid_on]:
-                ret[user_bid_on] = server_data[user_bid_on][user_id]
+            if user.id in server_data[user_bid_on]:
+                ret[user_bid_on] = server_data[user_bid_on][user.id]
 
         return ret
 
-    def _get_leaderboard(self, server_id, limit = 5):
+    def _get_leaderboard(self, server, limit = 5):
         """Retrieves a sorted list of tuples (member id, amount) to show users with the highest bids so far"""
 
-        server_data = self.data[server_id]
+        server_data = self.data[server.id]
 
         for user_bid_on in server_data.items():
             server_data[user_bid_on] = sum(server_data[user_bid_on].values())
