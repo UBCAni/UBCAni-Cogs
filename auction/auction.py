@@ -185,8 +185,8 @@ class Auction:
 
         if server.id not in self.data:
             self.data[server.id] = {}
-            dataIO.save_json(self.file_path, self.data
-                             
+            dataIO.save_json(self.file_path, self.data)
+
         if user.id not in self.data[server.id]:
             self.data[server.id][user.id] = {}
             dataIO.save_json(self.file_path, self.data)
