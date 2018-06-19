@@ -293,15 +293,11 @@ class Auction:
                 self.data[server.id] = {}
                 dataIO.save_json(self.file_path, self.data)
 
-            ids = []
-            accs = bank.get_server_accounts(server)
-            for acc in accs:
-                ids.append(acc.id)
-
             results = []
 
-            for user_id in ids:
-                member = discord.utils.get(ctx.message.server.members, id=user_id)
+            accs = bank.get_server_accounts(server)
+            for acc in accs:
+                member = discord.utils.get(ctx.message.server.members, id=acc.id)
                 bank.deposit_credits(member, amount)
                 results.append("{}: {}".format(member.name, amount))
 
