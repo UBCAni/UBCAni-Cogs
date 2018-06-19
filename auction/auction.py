@@ -125,6 +125,7 @@ class Auction:
     async def resetbid(self, ctx):
         """Resets all bids made by the current user, returning all the credits to the bank"""
         server = ctx.message.server
+        author = ctx.message.author
         bank = self.bot.get_cog("Economy").bank
 
         if server.id not in self.data:
@@ -143,7 +144,7 @@ class Auction:
         for key, value in returned_amounts.items():
             member = discord.utils.get(ctx.message.server.members, id=key)
             results.append("{} credits withdrawn from bid on {}".format(value, member.name))
-            bank.deposit_credits(user, value)
+            bank.deposit_credits(author, value)
 
         dataIO.save_json(self.file_path, self.data)
         await self.bot.say("```\n{}\n```".format('\n'.join(results)))
