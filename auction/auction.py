@@ -234,7 +234,7 @@ class Auction:
 
         scores = sorted(server_data.items(), key=operator.itemgetter(1))
         
-        return scores[:-6:-1]
+        return scores[:(limit+1)*-1:-1]
 
 
 def setup(bot):
