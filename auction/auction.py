@@ -235,6 +235,7 @@ class Auction:
         """Shows the current top 5 bidders"""
         
         server = ctx.message.server
+        author = ctx.message.author
 
         if user is None:
             user = author
