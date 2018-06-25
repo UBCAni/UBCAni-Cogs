@@ -75,8 +75,14 @@ class Auction:
         if user is None:
             user = author
 
-        if amount == 0:
-            return await self.bot.say("The amount must be non-zero")
+        # if amount == 0:
+        #     return await self.bot.say("The amount must be non-zero")
+
+        if ctx.message.channel.id != "458539080142028800":
+            return await self.bot.say("All bids must be placed in #auction")
+
+        if author.id != user.id and amount <= 0:
+            return await self.bot.say("At this time, credits may only be withdrawn from self-bids")
 
         if bank.account_exists(author):
             server_data = self.data[server.id]
@@ -146,34 +152,34 @@ class Auction:
 
         await self.bot.say("```\n{}\n```".format('\n'.join(results)))
 
-    @auction.command(pass_context=True, no_pm=True)
-    async def resetbid(self, ctx):
-        """Resets all bids made by the current user, returning all the credits to the bank"""
-        if await self._is_open(ctx):
-            server = ctx.message.server
-            author = ctx.message.author
-            bank = self.bot.get_cog("Economy").bank
+    # @auction.command(pass_context=True, no_pm=True)
+    # async def resetbid(self, ctx):
+    #     """Resets all bids made by the current user, returning all the credits to the bank"""
+    #     if await self._is_open(ctx):
+    #         server = ctx.message.server
+    #         author = ctx.message.author
+    #         bank = self.bot.get_cog("Economy").bank
 
-            if server.id not in self.data:
-                self.data[server.id] = {}
-                dataIO.save_json(self.file_path, self.data)
+    #         if server.id not in self.data:
+    #             self.data[server.id] = {}
+    #             dataIO.save_json(self.file_path, self.data)
 
-            returned_amounts = self._reset(server, ctx.message.author)
+    #         returned_amounts = self._reset(server, ctx.message.author)
 
-            if len(returned_amounts) == 0:
-                return await self.bot.say("No bids were placed, so nothing was withdrawn for you")
+    #         if len(returned_amounts) == 0:
+    #             return await self.bot.say("No bids were placed, so nothing was withdrawn for you")
 
-            await self.bot.say("The total amount withdrawn is {}".format(sum(returned_amounts.values())))
+    #         await self.bot.say("The total amount withdrawn is {}".format(sum(returned_amounts.values())))
 
-            results = []
+    #         results = []
 
-            for key, value in returned_amounts.items():
-                member = discord.utils.get(ctx.message.server.members, id=key)
-                results.append("{} credits withdrawn from bid on {}".format(value, member.name))
-                bank.deposit_credits(author, value)
+    #         for key, value in returned_amounts.items():
+    #             member = discord.utils.get(ctx.message.server.members, id=key)
+    #             results.append("{} credits withdrawn from bid on {}".format(value, member.name))
+    #             bank.deposit_credits(author, value)
 
-            dataIO.save_json(self.file_path, self.data)
-            await self.bot.say("```\n{}\n```".format('\n'.join(results)))
+    #         dataIO.save_json(self.file_path, self.data)
+    #         await self.bot.say("```\n{}\n```".format('\n'.join(results)))
 
     @auction.command(pass_context=True, no_pm=True)
     async def score(self, ctx, limit=5):
@@ -233,7 +239,7 @@ class Auction:
     @auction.command(pass_context=True, no_pm=True)
     async def bidders(self, ctx, user : discord.Member = None):
         """Shows the current top 5 bidders"""
-        
+
         server = ctx.message.server
         author = ctx.message.author
 
@@ -262,6 +268,7 @@ class Auction:
 
     @auction.command(pass_context=True, no_pm=True)
     async def allin(self, ctx, user : discord.Member = None):
+        """Transfers all to the given user"""
         if await self._is_open(ctx):
             author = ctx.message.author
             server = ctx.message.server
@@ -305,7 +312,7 @@ class Auction:
                 results.append("{}: {}".format(member.name, amount))
 
             await self.bot.say("```\n{}\n```".format('\n'.join(results)))
-        
+
     async def _is_open(self, ctx):
         if "open" not in self.data:
             self.data["open"] = False
