@@ -1,8 +1,8 @@
 
 {
-    "AUTHOR" : "TwelveNights",
-    "INSTALL_MSG" : "Thank you for installing the UBC Anime Clubs cogs!",
-    "NAME" : "UBCAni Cogs",
-    "SHORT" : "UBCAni's custom cogs",
-    "DESCRIPTION" : "Cogs which add functionality by the request of club members"
+    "AUTHOR" : "UBC Anime Club",
+    "INSTALL_MSG" : "Thank you for trying the UBC Anime Clubs cogs!\nYou can find our club here: https://ubcani.com/discord",
+    "NAME" : "UBCAni's Cogs",
+    "SHORT" : "Custom cogs for the purpose of the club",
+    "DESCRIPTION" : "Cogs which add domain-specific functionality for the UBC Anime Club."
 }

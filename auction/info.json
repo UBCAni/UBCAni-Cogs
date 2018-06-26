@@ -1,10 +1,10 @@
 
 {
-    "AUTHOR" : "TwelveNights",
-    "SHORT" : "Handles auctioning logic",
-    "DESCRIPTION" : "This hooks into the economy system to make auctioning happen",
+    "AUTHOR" : "UBC Anime Club",
+    "SHORT" : "Handles auction logic",
+    "DESCRIPTION" : "auction wraps itself around the economy system, allowing users to place bids using credits they own.",
     "DISABLED" : false,
-    "NAME" : "auction",
+    "NAME" : "Auction",
     "TAGS" : ["utility"],
-    "INSTALL_MSG" : "Enjoy!"
+    "INSTALL_MSG" : "Thank you for installing this cog."
 }

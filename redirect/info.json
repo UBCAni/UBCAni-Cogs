@@ -1,10 +1,10 @@
 
 {
-    "AUTHOR" : "TwelveNights",
+    "AUTHOR" : "UBC Anime Club",
     "SHORT" : "Redirect messages",
-    "DESCRIPTION" : "Sends messages from one channel to another",
+    "DESCRIPTION" : "Moves messages from one channel to another",
     "DISABLED" : false,
-    "NAME" : "redirect",
+    "NAME" : "Redirect",
     "TAGS" : ["utility"],
-    "INSTALL_MSG" : "Enjoy!"
+    "INSTALL_MSG" : "Thank you for installing this cog."
 }

@@ -1,10 +1,10 @@
 
 {
-    "AUTHOR" : "TwelveNights",
+    "AUTHOR" : "UBC Anime Club",
     "SHORT" : "Compares UBC schedules",
     "DESCRIPTION" : "With the compare-api project, this allows people to see what courses they share with others",
     "DISABLED" : false,
-    "NAME" : "compare",
+    "NAME" : "Compare",
     "TAGS" : ["utility"],
-    "INSTALL_MSG" : "Enjoy!"
+    "INSTALL_MSG" : "Thank you for installing this cog."
 }
