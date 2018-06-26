@@ -91,7 +91,8 @@ class Compare:
             elif resp.status == 200:
                 same = result["result"]
                 if len(same) == 0:
-                    return await self.bot.say("You have no classes in common :aquacry:")
+                    aquacry = discord.utils.get(message.server.emojis, name="aquacry")
+                    return await self.bot.say("You have no classes in common {}".format(str(aquacry)))
 
                 await self.bot.say("Here are the classes that you have in common:")
                 return await self.bot.say('\n'.join(same))
