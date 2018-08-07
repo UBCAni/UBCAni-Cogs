@@ -1,10 +1,10 @@
-import os
-
+import aiohttp
 import discord
+import io
+import os
 from .utils.dataIO import dataIO
 from discord.ext import commands
 from .utils import checks
-from __main__ import settings
 
 def check_folders():
     if not os.path.exists("data/UBCAniCogs/redirect"):
@@ -18,6 +18,9 @@ def check_files():
         print("Creating default redirect.json...")
         dataIO.save_json(f, {})
 
+async def download(attachment):
+    async with aiohttp.get(attachment["url"]) as response:
+        return await response.read()
 
 class Redirect:
     """Redirect messages from one channel to another"""
@@ -52,28 +55,25 @@ class Redirect:
         if server.id not in self.routes or message.channel.id not in self.routes[server.id]:
             return
 
-        if not isinstance(author, discord.Member) or author.bot or self.is_mod_or_superior(author):
+        if not isinstance(author, discord.Member) or author.bot:
             return
 
-        await self.bot.delete_message(message)
+        attachments = []
 
+        for attachment in message.attachments:
+            attachments.append((await download(attachment), attachment["filename"]))
+
+        await self.bot.delete_message(message)
         destination = discord.utils.get(server.channels, id=self.routes[server.id][message.channel.id])
 
-        return await self.bot.send_message(destination, "Report submitted by {}\n{}".format(message.author.mention, message.content))
+        await self.bot.send_message(destination, "Report submitted by {}\n{}".format(message.author.mention, message.content))
 
-    def is_mod_or_superior(self, user):
-        server = user.server
-        admin_role = settings.get_server_admin(server)
-        mod_role = settings.get_server_mod(server)
+        for attachment in attachments:
+            data, filename = attachment
+            buffer = io.BytesIO(data)
 
-        if user.id == settings.owner:
-            return True
-        elif discord.utils.get(user.roles, name=admin_role):
-            return True
-        elif discord.utils.get(user.roles, name=mod_role):
-            return True
-        else:
-            return False
+            await self.bot.send_file(destination, buffer, filename=filename)
+            buffer.close()
 
 def setup(bot):
     check_folders()

@@ -4,7 +4,6 @@ import discord
 from discord.ext import commands
 from .utils.dataIO import dataIO
 from .utils import checks
-from __main__ import send_cmd_help
 import os
 
 def check_folders():
@@ -30,7 +29,7 @@ class Compare:
     async def compare(self, ctx):
         """Comparison group of commands"""
         if ctx.invoked_subcommand is None:
-            await send_cmd_help(ctx)
+            await self.bot.send_cmd_help(ctx)
 
     @compare.command(pass_context=True, no_pm=True)
     async def upload(self, ctx):
