@@ -46,14 +46,14 @@ class Mailchimp:
             return await self.bot.say("The API key is not set for this server!")
 
         key = self.data[server.id]
-        payload = {"count": 1, "sort_field": "send_time", "sort_dir": "DESC"}
+        payload = {"count": 1, "sort_field": "send_time", "sort_dir": "DESC", "status": "sent"}
         url = "https://us7.api.mailchimp.com/3.0/campaigns"
         headers = {"Authorization": f"apikey {key}"}
 
         r = requests.get(url, params=payload, headers=headers)
 
         if r.status_code == 200:
-            await self.bot.say(r.json()["campaigns"][0]["long_archive_url"])
+            await self.bot.say(f"The last newsletter sent was: {r.json()["campaigns"][0]["long_archive_url"]}")
         else:
             await self.bot.say("There was an issue with using the mailchimp API")
 
