@@ -53,7 +53,7 @@ class Mailchimp:
         r = requests.get(url, params=payload, headers=headers)
 
         if r.status_code == 200:
-            await self.bot.say(f"The last newsletter sent was: {r.json()["campaigns"][0]["long_archive_url"]}")
+            await self.bot.say(f"The last newsletter sent was: {r.json()['campaigns'][0]['long_archive_url']}")
         else:
             await self.bot.say("There was an issue with using the mailchimp API")
 
