@@ -1,0 +1,9 @@
+{
+    "AUTHOR" : "UBC Anime Club",
+    "SHORT" : "Allows Mailchimp administrative commands",
+    "DESCRIPTION" : "mailchimp allows users to access certain information about our recent newsletter",
+    "DISABLED" : false,
+    "NAME" : "Mailchimp",
+    "TAGS" : ["utility"],
+    "INSTALL_MSG" : "Thank you for installing this cog."
+}
