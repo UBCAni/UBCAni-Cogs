@@ -41,6 +41,7 @@ class Mailchimp:
 
     @commands.command(pass_context=True, no_pm=True)
     async def newsletter(self, ctx):
+        """The last newsletter sent"""
         server = ctx.message.server
         if server.id not in self.data or not self.data[server.id]:
             return await self.bot.say("The API key is not set for this server!")
