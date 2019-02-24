@@ -57,27 +57,9 @@ class Forum:
 
         return await self.bot.say("Let someone else continue the count.")
 
-    @commands.group(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True, no_pm=True)
     async def countinfo(self, ctx):
-        """Count information commands"""
-        if ctx.invoked_subcommand is None:
-            await send_cmd_help(ctx)
-
-    @countinfo.command(pass_context=True, no_pm=True)
-    async def now(self, ctx):
         """Gives the current value"""
-        server_id = ctx.message.server.id
-
-        if server_id not in self.data:
-           self.data[server_id] = { "last_count": 0, "contributors": {}, "last_contributor": None }
-
-        d = self.data[server_id]
-
-        return await self.bot.say("We are now at {}.".format(d["last_count"]))
-
-    @countinfo.command(pass_context=True, no_pm=True)
-    async def me(self, ctx):
-        """Shows your contributions"""
         server_id = ctx.message.server.id
         author_id = ctx.message.author.id
 
@@ -86,10 +68,13 @@ class Forum:
 
         d = self.data[server_id]
 
-        if author_id not in d["contributors"]:
-            return await self.bot.say("You have made no contributions; get counting!")
+        message = "You have made no contributions; get counting!"
 
-        return await self.bot.say("You've counted {} number(s): {}".format(len(d["contributors"][author_id]), ", ".join(map(str, d["contributors"][author_id]))))
+        if author_id in d["contributors"]:
+            contributions = d["contributors"][author_id]
+            message = "You've counted {} number{}: {}".format(len(contributions), "" if len(contributions) == 1 else "s", ", ".join(map(str, contributions)))
+
+        return await self.bot.say("We are now at {}.\n{}".format(d["last_count"], message))
 
 def setup(bot):
     check_folders()
