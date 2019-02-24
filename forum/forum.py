@@ -86,7 +86,7 @@ class Forum:
 
         d = self.data[server_id]
 
-        if author_id in d["contributors"]:
+        if author_id not in d["contributors"]:
             return await self.bot.say("You have made no contributions; get counting!")
 
         return await self.bot.say("You've counted {} numbers: {}".format(len(d["contributors"][author_id]), ", ".join(d["contributors"][author_id])))
