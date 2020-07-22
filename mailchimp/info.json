@@ -1,5 +1,5 @@
 {
-    "author" : "UBC Anime Club",
+    "author" : ["UBC Anime Club"],
     "short" : "Allows Mailchimp administrative commands",
     "description" : "mailchimp allows users to access certain information about our recent newsletter",
     "name" : "Mailchimp",

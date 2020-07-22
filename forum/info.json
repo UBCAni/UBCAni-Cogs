@@ -1,6 +1,6 @@
 
 {
-    "author" : "UBC Anime Club",
+    "author" : ["UBC Anime Club"],
     "short" : "Enables basic set of forum games",
     "description" : "Miss classic forum games? This cog enables classic ones",
     "name" : "Forum",
