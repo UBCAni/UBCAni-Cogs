@@ -43,14 +43,14 @@ class Forum(commands.Cog):
         """Gives the current value"""
         settings = self.config.guild(ctx.guild)
 
-        contributors = await settings.contributors()
-        if ctx.author.id in contributors:
-            contributions = contributors[ctx.author.id]
-            if len(contributions) == 0:
-                message = "You have made no contributions; get counting!"
+        async with settings.contributors() as contributors:
+            if ctx.author.id in contributors:
+                contributions = contributors[ctx.author.id]
+                if len(contributions) == 0:
+                    message = "You have made no contributions; get counting!"
+                else:
+                    message = "You've counted {} number{}: {}".format(len(contributions), "" if len(contributions) == 1 else "s", ", ".join(map(str, contributions)))
             else:
-                message = "You've counted {} number{}: {}".format(len(contributions), "" if len(contributions) == 1 else "s", ", ".join(map(str, contributions)))
-        else:
-            message = "You have made no contributions; get counting!"
+                message = "You have made no contributions; get counting!"
 
         return await ctx.send("We are now at {}.\n{}".format(await settings.last_count(), message))
