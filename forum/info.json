@@ -1,10 +1,9 @@
 
 {
-    "AUTHOR" : "UBC Anime Club",
-    "SHORT" : "Enables basic set of forum games",
-    "DESCRIPTION" : "Miss classic forum games? This cog enables classic ones",
-    "DISABLED" : false,
-    "NAME" : "Compare",
-    "TAGS" : ["utility"],
-    "INSTALL_MSG" : "Thank you for installing this cog."
+    "author" : "UBC Anime Club",
+    "short" : "Enables basic set of forum games",
+    "description" : "Miss classic forum games? This cog enables classic ones",
+    "name" : "Forum",
+    "tags" : ["Fun", "Games"],
+    "install_msg" : "Thank you for installing this cog."
 }

@@ -1,64 +1,51 @@
-from discord.ext import commands
-from .utils.dataIO import dataIO
-from .utils import checks
-import os
-import requests
+from redbot.core import Config, checks, commands
+import json
+import urllib.request
 
-def check_folders():
-    if not os.path.exists("data/UBCAniCogs/mailchimp"):
-        print("Creating data/UBCAniCogs/mailchimp folder...")
-        os.makedirs("data/UBCAniCogs/mailchimp")
-
-def check_files():
-    f = "data/UBCAniCogs/mailchimp/mailchimp.json"
-    if not dataIO.is_valid_json(f):
-        print("Creating default mailchimp.json...")
-        dataIO.save_json(f, {})
-
-class Mailchimp:
+class Mailchimp(commands.Cog):
     """Mailchimp integrates with our mailing service"""
 
     def __init__(self, bot):
-        self.bot = bot
-        self.file_path = "data/UBCAniCogs/mailchimp/mailchimp.json"
-        self.data = dataIO.load_json(self.file_path)
+        defaults = dict(api_key="")
 
-    @commands.group(pass_context=True, no_pm=True)
+        self.bot = bot
+        self.config = Config.get_conf(self, 623215216)
+        self.config.register_guild(**defaults)
+
+
+    @commands.group(autohelp=True)
+    @commands.guild_only()
     async def mailchimp(self, ctx):
         """Mailchimp group of commands"""
-        if ctx.invoked_subcommand is None:
-            await self.bot.send_cmd_help(ctx)
+        pass
 
-    @mailchimp.command(pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
+    @commands.guild_only()
+    @checks.admin_or_permissions(administrator=True)
+    @mailchimp.command()
     async def key(self, ctx, key : str):
         """Sets the API key for mailchimp"""
-        server = ctx.message.server
-        self.data[server.id] = key
-        dataIO.save_json(self.file_path, self.data)
-        await self.bot.delete_message(ctx.message)
-        await self.bot.say("API key successfully set")
+        await self.config.guild(ctx.guild).api_key.set(key)
+        await ctx.message.delete()
+        await ctx.send("API key successfully set")
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.guild_only()
+    @commands.command()
     async def newsletter(self, ctx):
         """The last newsletter sent"""
-        server = ctx.message.server
-        if server.id not in self.data or not self.data[server.id]:
-            return await self.bot.say("The API key is not set for this server!")
+        settings = self.config.guild(ctx.guild)
+        key = await settings.api_key()
+        if len(key) == 0:
+            return await ctx.send("The API key is not set for this server!")
 
-        key = self.data[server.id]
-        payload = {"count": 1, "sort_field": "send_time", "sort_dir": "DESC", "status": "sent"}
+        payload = {"count": 1, "sort_field": "send_time", "sort_dir": "DESC", "status": "sent", "type": "regular"}
         url = "https://us7.api.mailchimp.com/3.0/campaigns"
-        headers = {"Authorization": f"apikey {key}"}
+        headers = {"Authorization": f"apikey {key}", "Content-Type": "application/json" }
 
-        r = requests.get(url, params=payload, headers=headers)
+        r = urllib.request.Request(url=url, data=json.dumps(payload).encode(), headers=headers)
+        with urllib.request.urlopen(r) as f:
+            data = json.loads(f.read().decode())
 
-        if r.status_code == 200:
-            await self.bot.say(f"The last newsletter sent was: {r.json()['campaigns'][0]['long_archive_url']}")
+        if f.status == 200:
+            await ctx.send("The last newsletter sent was: {}".format(data['long_archive_url']))
         else:
-            await self.bot.say("There was an issue with using the mailchimp API")
-
-def setup(bot):
-    check_folders()
-    check_files()
-    bot.add_cog(Mailchimp(bot))
+            await ctx.send("There was an issue with using the mailchimp API")

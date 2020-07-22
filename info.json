@@ -1,8 +1,8 @@
 
 {
-    "AUTHOR" : "UBC Anime Club",
-    "INSTALL_MSG" : "Thank you for trying the UBC Anime Clubs cogs!\nYou can find our club here: https://ubcani.com/discord",
-    "NAME" : "UBCAni's Cogs",
-    "SHORT" : "Custom cogs for the purpose of the club",
-    "DESCRIPTION" : "Cogs which add domain-specific functionality for the UBC Anime Club."
+    "author" : "UBC Anime Club",
+    "install_msg" : "Thank you for trying the UBC Anime Clubs cogs!\nYou can find our club here: https://ubcani.com/discord",
+    "name" : "UBCAni's Cogs",
+    "short" : "Custom cogs for the purpose of the club",
+    "description" : "Cogs which add domain-specific functionality for the UBC Anime Club."
 }
