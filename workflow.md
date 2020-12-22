@@ -5,7 +5,7 @@
 
 3.) Submit design doc for review
 
-    a.) Revise design doc until approved
+- Revise design doc until approved
 
 4.) Complete user story according to design doc and testing
 
