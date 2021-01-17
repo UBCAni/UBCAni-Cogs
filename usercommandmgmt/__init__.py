@@ -1,5 +1,6 @@
 from .usercommandmgmt import Usercommandmgmt
+from redbot.core.bot import Red
 
 
-def setup(bot):
-    bot.add_cog(Usercommandmgmt())
+def setup(bot: Red):
+    bot.add_cog(Usercommandmgmt(bot))

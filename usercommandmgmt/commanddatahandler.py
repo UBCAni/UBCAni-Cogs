@@ -35,8 +35,42 @@ def SaveDatabase():
     saves loaded_cmd_data to command_data.json
     """
     with open('command_data.json', 'w') as outfile:
-    json.dump(loaded_cmd_data, outfile)
+        json.dump(loaded_cmd_data, outfile)
 
+    outfile.close()
+
+def getUserCommQuantity(user_id):
+    """
+    returns how many commands are owned by the user who owns the given ID. If user does not exist in database, returns zero.
+    """
+    cmd_count = 0
+    for command, owner in loaded_cmd_data.keys:
+        if user_id == owner:
+            cmd_count += 1
+
+    return cmd_count
+
+
+def BelomgsToUser(cmd_name, user_id):
+    """
+    returns true if the name of the given command belongs to the user who owns the given ID, false otherwise. Will also
+    return false if the command does not exist.
+    """
+
+    if CommExists(cmd_name) == False:
+        return False
+
+    return loaded_cmd_data[cmd_name] == user_id
+
+def CommExists(cmd_name):
+    """
+    returns true if the given command name exists in the database
+    """
+    for cmd in loaded_cmd_data:
+        if cmd == cmd_name:
+            return True
+
+    return False
 
 
 
