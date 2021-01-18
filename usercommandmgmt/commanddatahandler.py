@@ -10,7 +10,7 @@ def AddCommandEntry(cmd_name, user_id):
     """
     adds the name of a new command, and the ID of the user that created it
     """
-    n_entry = {cmd_name, user_id}
+    n_entry = {cmd_name: user_id}
     loaded_cmd_data.update(n_entry)
 
 def RemoveCommandEntry(cmd_name):
@@ -44,7 +44,7 @@ def getUserCommQuantity(user_id):
     returns how many commands are owned by the user who owns the given ID. If user does not exist in database, returns zero.
     """
     cmd_count = 0
-    for command, owner in loaded_cmd_data.keys:
+    for command, owner in loaded_cmd_data.iteritems():
         if user_id == owner:
             cmd_count += 1
 
