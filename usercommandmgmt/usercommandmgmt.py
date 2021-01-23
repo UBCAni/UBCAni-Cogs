@@ -23,7 +23,7 @@ class Usercommandmgmt(CustomCommands):
         saveFile = os.path.join(data_manager.cog_data_path(cog_instance=self), "user commands.json")
         if not os.path.isfile(saveFile):
             with open(saveFile, "w+") as f:
-                empty = dict()
+                empty = {"db": []}
                 json.dump(empty, f)
 
         self.activeDb = Database(saveFile)
@@ -67,7 +67,7 @@ class Usercommandmgmt(CustomCommands):
             await ctx.invoke(self.cc_create_simple, command=command, text=text)
 
             #marks command as created by admin in database, exempted from count
-            self.activeDb.SaveToDb(command, text, True)
+            self.activeDb.SaveToDb(command, ctx.message.author.id, True)
 
         #normal per-role allowance check and moderation process if user isnt an admin
         else:
@@ -86,8 +86,39 @@ class Usercommandmgmt(CustomCommands):
             await ctx.invoke(self.cc_create_simple, command=command, text=text)
 
             #marks command as created by non-admin; counted as normal
-            self.activeDb.SaveToDb(command, text, False)
-            
+            self.activeDb.SaveToDb(command, ctx.message.author.id, False)
+
+    
+    @customcom.command(name="delete", aliases=["del", "remove"])
+    async def cc_delete(self, ctx, command: str.lower):
+        """Delete a custom command.
+
+        Example:
+            - `[p]customcom delete yourcommand`
+
+        **Arguments:**
+
+        - `<command>` The custom command to delete.
+        """
+        #if user is admin, allows them to delete any command
+        if ctx.message.author.top_role.permissions.administrator:
+            try:
+                await self.commandobj.delete(ctx=ctx, command=command)
+                await ctx.send(_("Custom command successfully deleted."))
+            except NotFound:
+                await ctx.send(_("That command doesn't exist."))
+        #if user isnt an admin, only allows them to delete their own commands
+        else:
+            if self.activeDb.BelongsToUser(command, ctx.message.author.id) == False:
+                await ctx.send(_("Hey, that's not yours."))
+                return 
+
+            try:
+                await self.commandobj.delete(ctx=ctx, command=command)
+                await ctx.send(_("Custom command successfully deleted."))
+            except NotFound:
+                await ctx.send(_("That command doesn't exist."))
+
 
     def GetHighestUserCommAllowance(self, member):
         """
@@ -95,16 +126,15 @@ class Usercommandmgmt(CustomCommands):
         """
         #all of the given user's roles
         usr_roles = member.roles
-
         #the user's roles that confer different command allowances
         rel_usr_roles = [0]
 
-        for cmd in self.activeDb.loaded_cmd_data:
-            allowance = role_cmd_limits.get(cmd)
-
-            if allowance != None:
+        for cmd in usr_roles:
+            allowance = role_cmd_limits.get(cmd.name, 0)
+            if allowance != 0:
                 rel_usr_roles.append(allowance)
 
+        
         return max(rel_usr_roles)   
 
     def ModEvaluate(self, proposed_msg):
@@ -124,7 +154,9 @@ class Usercommandmgmt(CustomCommands):
         """
         returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
         """
-        return self.activeDb.GetUserCommQuantity(member.id) < Usercommandmgmt.GetHighestUserCommAllowance(member)
+        print(self.activeDb.GetUserCommQuantity(member.id))
+        print(Usercommandmgmt.GetHighestUserCommAllowance(self, member = member))
+        return self.activeDb.GetUserCommQuantity(member.id) < Usercommandmgmt.GetHighestUserCommAllowance(self, member = member)
 
 
 

@@ -8,8 +8,10 @@ class Database:
     def __init__(self, directory):
         super().__init__()
         self.dir = directory
-        self.loaded_cmd_data = {}
+        self.loaded_cmd_data = {"db": []}
+
         self.ReadFromDB()
+
 
     def ReadFromDB(self):
         try:
@@ -25,7 +27,8 @@ class Database:
         n_entry = {"cmd_name": cmd_name,
                    "cmd_owner": cmd_owner,
                    "admin-made": is_admin}
-        self.loaded_cmd_data.update(n_entry)
+        self.loaded_cmd_data["db"].append(n_entry)
+        print(self.loaded_cmd_data)
         with open(self.dir, 'w') as outfile:
             json.dump(self.loaded_cmd_data, outfile)
 
@@ -42,7 +45,8 @@ class Database:
         returns how many commands are owned by the user who owns the given ID. If user does not exist in database, returns zero.
         """
         cmd_count = 0
-        for command in self.loaded_cmd_data:
+        print(self.loaded_cmd_data)
+        for command in self.loaded_cmd_data["db"]:
             if command["cmd_owner"] == user_id:
                 cmd_count += 1
 
@@ -52,7 +56,7 @@ class Database:
         """
         returns true if the given command name exists in the database
         """
-        for cmd in self.loaded_cmd_data:
+        for cmd in self.loaded_cmd_data["db"]:
             if cmd["cmd_name"] == cmd_name:
                 return True
 
@@ -62,13 +66,13 @@ class Database:
         """
         returns the database entry for the given cmd_name, if it exists
         """
-        for cmd in self.loaded_cmd_data:
+        for cmd in self.loaded_cmd_data["db"]:
             if cmd["cmd_name"] == cmd_name:
                 return cmd
 
         return None
     
-    def BelongsToSUer(self, cmd_name, user_id):
+    def BelongsToUser(self, cmd_name, user_id):
         """
         returns true if the name of the given command belongs to the user who owns the given ID, false otherwise. Will also
         return false if the command does not exist.
@@ -79,7 +83,7 @@ class Database:
 
         return self.GetComm(cmd_name)["cmd_name"] == user_id
 
-
+    
 
 
 
