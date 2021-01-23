@@ -1,76 +1,84 @@
 #manages the custom command data stored in command_data.json
 
 import json 
+import os
 
-#working database
-#to be performant, load this opon the cog being loaded, and save to database when the cog is unloaded or bot shuts down
-loaded_cmd_data = {}
+class Database:
+    '''database object; stores info for custom commands'''
+    def __init__(self, directory):
+        super().__init__()
+        self.dir = directory
+        self.loaded_cmd_data = {}
+        self.ReadFromDB()
 
-def AddCommandEntry(cmd_name, user_id):
-    """
-    adds the name of a new command, and the ID of the user that created it
-    """
-    n_entry = {cmd_name: user_id}
-    loaded_cmd_data.update(n_entry)
+    def ReadFromDB(self):
+        try:
+            with open(self.dir, "r") as f:
+                self.loaded_cmd_data = json.load(f)
+        except IOError:
+            self.loaded_cmd_data = {}
 
-def RemoveCommandEntry(cmd_name):
-    """
-    removes a command entry
-    """
-    del loaded_cmd_data[cmd_name]
+    def SaveToDb(self, cmd_name, cmd_owner, is_admin):
+        '''
+        saves a command's info to the database
+        '''
+        n_entry = {"cmd_name": cmd_name,
+                   "cmd_owner": cmd_owner,
+                   "admin-made": is_admin}
+        self.loaded_cmd_data.update(n_entry)
+        with open(self.dir, 'w') as outfile:
+            json.dump(self.loaded_cmd_data, outfile)
 
+    def DeleteFromDb(self, cmd_name):
+        '''
+        removes an entry from the list of command data and updates the database
+        '''
+        del self.loaded_cmd_data[cmd_name]
+        with open(self.dir, 'w') as outfile:
+            json.dump(self.loaded_cmd_data, outfile)
 
-def LoadDatabase():
-    """
-    loads the database to loaded_cmd_data
-    """
-    rawD = open('command_data.json')
-    loaded_cmd_data = json.load(rawD ,)
+    def GetUserCommQuantity(self, user_id):
+        """
+        returns how many commands are owned by the user who owns the given ID. If user does not exist in database, returns zero.
+        """
+        cmd_count = 0
+        for command in self.loaded_cmd_data:
+            if command["cmd_owner"] == user_id:
+                cmd_count += 1
 
-    rawD.close()
+        return cmd_count
 
+    def CommExists(self, cmd_name):
+        """
+        returns true if the given command name exists in the database
+        """
+        for cmd in self.loaded_cmd_data:
+            if cmd["cmd_name"] == cmd_name:
+                return True
 
-def SaveDatabase():
-    """
-    saves loaded_cmd_data to command_data.json
-    """
-    with open('command_data.json', 'w') as outfile:
-        json.dump(loaded_cmd_data, outfile)
-
-    outfile.close()
-
-def getUserCommQuantity(user_id):
-    """
-    returns how many commands are owned by the user who owns the given ID. If user does not exist in database, returns zero.
-    """
-    cmd_count = 0
-    for command, owner in loaded_cmd_data.iteritems():
-        if user_id == owner:
-            cmd_count += 1
-
-    return cmd_count
-
-
-def BelomgsToUser(cmd_name, user_id):
-    """
-    returns true if the name of the given command belongs to the user who owns the given ID, false otherwise. Will also
-    return false if the command does not exist.
-    """
-
-    if CommExists(cmd_name) == False:
         return False
 
-    return loaded_cmd_data[cmd_name] == user_id
+    def GetComm(self, cmd_name):
+        """
+        returns the database entry for the given cmd_name, if it exists
+        """
+        for cmd in self.loaded_cmd_data:
+            if cmd["cmd_name"] == cmd_name:
+                return cmd
 
-def CommExists(cmd_name):
-    """
-    returns true if the given command name exists in the database
-    """
-    for cmd in loaded_cmd_data:
-        if cmd == cmd_name:
-            return True
+        return None
+    
+    def BelongsToSUer(self, cmd_name, user_id):
+        """
+        returns true if the name of the given command belongs to the user who owns the given ID, false otherwise. Will also
+        return false if the command does not exist.
+        """
 
-    return False
+        if CommExists(cmd_name) == False:
+            return False
+
+        return self.GetComm(cmd_name)["cmd_name"] == user_id
+
 
 
 
