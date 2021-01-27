@@ -8,11 +8,10 @@ import os
 
 
 #imports customcomm class
-path = inspect.getfile(commands).replace("\core\commands\__init__.py", "")
 path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(inspect.getfile(commands)))), "cogs\customcom")
 sys.path.insert(1, path)
 
-from customcom import CustomCommands, CommandObj
+from customcom import CustomCommands, CommandObj,NotFound, ArgParseError, CommandNotEdited
 
 
 class Usercommandmgmt(CustomCommands):
@@ -103,21 +102,75 @@ class Usercommandmgmt(CustomCommands):
         #if user is admin, allows them to delete any command
         if ctx.message.author.top_role.permissions.administrator:
             try:
+                await ctx.send("Admin Override.")
                 await self.commandobj.delete(ctx=ctx, command=command)
-                await ctx.send(_("Custom command successfully deleted."))
+                self.activeDb.DeleteFromDb(command)
+                await ctx.send("Custom command successfully deleted.")
             except NotFound:
-                await ctx.send(_("That command doesn't exist."))
+                await ctx.send("That command doesn't exist.")
         #if user isnt an admin, only allows them to delete their own commands
         else:
             if self.activeDb.BelongsToUser(command, ctx.message.author.id) == False:
-                await ctx.send(_("Hey, that's not yours."))
+                await ctx.send("Hey, that's not yours.")
                 return 
 
             try:
                 await self.commandobj.delete(ctx=ctx, command=command)
-                await ctx.send(_("Custom command successfully deleted."))
+                self.activeDb.DeleteFromDb(command)
+                await ctx.send("Custom command successfully deleted.")
             except NotFound:
-                await ctx.send(_("That command doesn't exist."))
+                await ctx.send("That command doesn't exist.")
+
+
+    @customcom.command(name="edit")
+    async def cc_edit(self, ctx, command: str.lower, *, text: str = None):
+        """Edit a custom command.
+
+        Example:
+            - `[p]customcom edit yourcommand Text you want`
+
+        **Arguments:**
+
+        - `<command>` The custom command to edit.
+        - `<text>` The new text to return when executing the command.
+        """
+        if ctx.message.author.top_role.permissions.administrator:
+            await ctx.send("Admin Override.")
+           
+            try:
+                await self.commandobj.edit(ctx=ctx, command=command, response=text)
+                await ctx.send("Custom command successfully edited.")
+            except NotFound:
+                await ctx.send(
+                ("That command doesn't exist. Use `{command}` to add it.").format(
+                    command=f"{ctx.clean_prefix}customcom create"
+                )
+            )
+            except ArgParseError as e:
+                await ctx.send(e.args[0])
+            except CommandNotEdited:
+                pass    
+        else:
+            #blocks a user from editing a command that isnt theirs
+            if self.activeDb.BelongsToUser(command, ctx.message.author.id) == False:
+                await ctx.send(("Hey, that's not yours."))
+                return 
+                
+            try:
+                await self.commandobj.edit(ctx=ctx, command=command, response=text)
+                await ctx.send(("Custom command successfully edited."))
+            except NotFound:
+                await ctx.send(
+                ("That command doesn't exist. Use `{command}` to add it.").format(
+                    command=f"{ctx.clean_prefix}customcom create"
+                )
+            )
+            except ArgParseError as e:
+                await ctx.send(e.args[0])
+            except CommandNotEdited:
+                pass    
+
+
 
 
     def GetHighestUserCommAllowance(self, member):
@@ -154,8 +207,8 @@ class Usercommandmgmt(CustomCommands):
         """
         returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
         """
-        print(self.activeDb.GetUserCommQuantity(member.id))
-        print(Usercommandmgmt.GetHighestUserCommAllowance(self, member = member))
+        #print(self.activeDb.GetUserCommQuantity(member.id))
+        #print(Usercommandmgmt.GetHighestUserCommAllowance(self, member = member))
         return self.activeDb.GetUserCommQuantity(member.id) < Usercommandmgmt.GetHighestUserCommAllowance(self, member = member)
 
 
