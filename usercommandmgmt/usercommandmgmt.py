@@ -3,18 +3,9 @@ from .configurable import *
 from .commanddatahandler import *
 import inspect
 import sys
-from .commanddatahandler import Database
 import os
-
-
-# imports customcomm class
-path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(inspect.getfile(commands)))),
-    "cogs\customcom",
-)
-sys.path.insert(1, path)
-
-from customcom import (
+from redbot.cogs.customcom import CustomCommands
+from redbot.cogs.customcom.customcom import (
     CustomCommands,
     CommandObj,
     NotFound,
@@ -37,20 +28,6 @@ class Usercommandmgmt(CustomCommands):
                 json.dump(empty, f)
 
         self.activeDb = Database(saveFile)
-
-    # def createDbInstance(self, path):
-    #     if not os.path.isfile(path):
-    #         with open(path, "w+") as f:
-    #             empty = dict()
-    #             json.dump(empty, f)
-
-    #     activeDb = Database(path)
-
-    @commands.command()
-    async def testcomm(self, ctx):
-        """This does stuff!"""
-
-        pass
 
     @commands.group(aliases=["cc"])
     @commands.guild_only()
@@ -81,7 +58,7 @@ class Usercommandmgmt(CustomCommands):
         # normal per-role allowance check and moderation process if user isnt an admin
         else:
             # checks if user has any capacity left to make commands based on their allowance
-            if self.EnforceUserCmdLimit(ctx.message.author) == False:
+            if not self.enforce_user_cmd_limit(ctx.message.author):
                 await ctx.send(
                     "Sorry, you have already created the maximum number of commands allowed by your role"
                 )
@@ -90,7 +67,7 @@ class Usercommandmgmt(CustomCommands):
             await ctx.send("Command request submitted")
 
             # if check is passed, the command is submitted to a specified moderation channel for evaluation
-            if self.ModEvaluate(text) == False:
+            if not self.mod_evaluate_command(text):
                 await ctx.send(
                     "Sorry, your requested command was deemed inappopriate by moderator"
                 )
@@ -125,7 +102,7 @@ class Usercommandmgmt(CustomCommands):
                 await ctx.send("That command doesn't exist.")
         # if user isnt an admin, only allows them to delete their own commands
         else:
-            if self.activeDb.BelongsToUser(command, ctx.message.author.id) == False:
+            if not self.activeDb.BelongsToUser(command, ctx.message.author.id):
                 await ctx.send("Hey, that's not yours.")
                 return
 
@@ -168,7 +145,7 @@ class Usercommandmgmt(CustomCommands):
                 pass
         else:
             # blocks a user from editing a command that isnt theirs
-            if self.activeDb.BelongsToUser(command, ctx.message.author.id) == False:
+            if not self.activeDb.BelongsToUser(command, ctx.message.author.id):
                 await ctx.send("Hey, that's not yours.")
                 return
 
@@ -188,7 +165,8 @@ class Usercommandmgmt(CustomCommands):
             except CommandNotEdited:
                 pass
 
-    def GetHighestUserCommAllowance(self, member):
+    @staticmethod
+    def get_highest_user_comm_allowance(self, member):
         """
         returns the highest number of custom commands permitted by the user's roles
         """
@@ -204,23 +182,25 @@ class Usercommandmgmt(CustomCommands):
 
         return max(rel_usr_roles)
 
-    def ModEvaluate(self, proposed_msg):
+    @staticmethod
+    def mod_evaluate_command(self, proposed_msg):
         """
         posts the proposed command in the specified channel, and waits for a moderator's reaction to either
         reject or accept the command. Will  return true if command_moderation is set to False or command
         passes moderator evalutaion. False if it is rejected by a moderator.
         Note: proposed_msg is the proposed command
         """
-        if command_moderation == False:
+        if not command_moderation:
             return True
         else:
             # submits command for evaluation and awaits response; TODO
             pass
 
-    def EnforceUserCmdLimit(self, member):
+    @staticmethod
+    def enforce_user_cmd_limit(self, member):
         """
         returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
         """
         return self.activeDb.GetUserCommQuantity(
             member.id
-        ) < Usercommandmgmt.GetHighestUserCommAllowance(self, member=member)
+        ) < get_highest_user_comm_allowance(self, member=member)

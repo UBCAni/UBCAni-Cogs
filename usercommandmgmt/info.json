@@ -1,5 +1,5 @@
 {
-    "AUTHOR" : "UBC Anime Club",
+    "AUTHOR" : ["UBC Anime Club"],
     "SHORT" : "Custom user command management and moderation",
     "DESCRIPTION" : "Enforces arbitrary user command limits and provides a means of moderating them",
     "DISABLED" : false,
