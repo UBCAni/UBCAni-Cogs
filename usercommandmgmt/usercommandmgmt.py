@@ -35,7 +35,7 @@ class Usercommandmgmt(CustomCommands):
         """Base command for Custom Commands management."""
         pass
 
-    @customcom.group(name="create", aliases=["add"], invoke_without_command=True)
+    @customcom.group(name="create", aliases=["add", "new"], invoke_without_command=True)
     async def cc_create(self, ctx: commands.Context, command: str.lower, *, text: str):
         """Create custom commands.
 
@@ -50,15 +50,17 @@ class Usercommandmgmt(CustomCommands):
             # custom command is created and the entry is added to the database
             try:
                 await ctx.invoke(self.cc_create_simple, command=command, text=text)
-                # marks command as created by admin in database, exempted from count
-                await self.activeDb.SaveToDb(command, ctx.message.author.id, True)
             except:
                 await ctx.send("something went wrong; could not add command")
                 return
+            # marks command as created by admin in database, exempted from count
+            self.activeDb.save_to_db(
+                command, ctx.message.author.id, True, ctx.message.guild
+            )
         # normal per-role allowance check and moderation process if user isnt an admin
         else:
             # checks if user has any capacity left to make commands based on their allowance
-            if not self.enforce_user_cmd_limit(ctx.message.author):
+            if not self.enforce_user_cmd_limit(ctx.message.author, ctx.message.guild):
                 await ctx.send(
                     "Sorry, you have already created the maximum number of commands allowed by your role"
                 )
@@ -74,11 +76,13 @@ class Usercommandmgmt(CustomCommands):
                 return
             try:
                 await ctx.invoke(self.cc_create_simple, command=command, text=text)
-                # marks command as created by non-admin; counted as normal
-                await self.activeDb.SaveToDb(command, ctx.message.author.id, False)
             except:
                 await ctx.send("something went wrong; could not add command")
                 return
+            # marks command as created by non-admin; counted as normal
+            self.activeDb.save_to_db(
+                command, ctx.message.author.id, False, ctx.message.guild
+            )
 
     @customcom.command(name="delete", aliases=["del", "remove"])
     async def cc_delete(self, ctx, command: str.lower):
@@ -96,22 +100,24 @@ class Usercommandmgmt(CustomCommands):
             try:
                 await ctx.send("Admin Override.")
                 await self.commandobj.delete(ctx=ctx, command=command)
-                await self.activeDb.DeleteFromDb(command)
-                await ctx.send("Custom command successfully deleted.")
             except NotFound:
                 await ctx.send("That command doesn't exist.")
+                return
+            self.activeDb.delete_from_db(command)
+            await ctx.send("Custom command successfully deleted.")
         # if user isnt an admin, only allows them to delete their own commands
         else:
-            if not self.activeDb.BelongsToUser(command, ctx.message.author.id):
+            if not self.activeDb.belongs_to_user(command, ctx.message.author.id):
                 await ctx.send("Hey, that's not yours.")
                 return
 
             try:
                 await self.commandobj.delete(ctx=ctx, command=command)
-                await self.activeDb.DeleteFromDb(command)
-                await ctx.send("Custom command successfully deleted.")
             except NotFound:
                 await ctx.send("That command doesn't exist.")
+                return
+            self.activeDb.delete_from_db(command)
+            await ctx.send("Custom command successfully deleted.")
 
     @customcom.command(name="edit")
     async def cc_edit(self, ctx, command: str.lower, *, text: str = None):
@@ -133,11 +139,7 @@ class Usercommandmgmt(CustomCommands):
                 await ctx.send("Custom command successfully edited.")
             except NotFound:
                 await ctx.send(
-                    (
-                        "That command doesn't exist. Use"
-                        + ctx.clean_prefix
-                        + " to add it."
-                    )
+                    "That command doesn't exist. Use" + ctx.clean_prefix + " to add it."
                 )
             except ArgParseError as e:
                 await ctx.send(e.args[0])
@@ -145,7 +147,7 @@ class Usercommandmgmt(CustomCommands):
                 pass
         else:
             # blocks a user from editing a command that isnt theirs
-            if not self.activeDb.BelongsToUser(command, ctx.message.author.id):
+            if not self.activeDb.belongs_to_user(command, ctx.message.author.id):
                 await ctx.send("Hey, that's not yours.")
                 return
 
@@ -197,10 +199,10 @@ class Usercommandmgmt(CustomCommands):
             pass
 
     @staticmethod
-    def enforce_user_cmd_limit(self, member):
+    def enforce_user_cmd_limit(self, member, server):
         """
         returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
         """
         return self.activeDb.GetUserCommQuantity(
-            member.id
+            member.id, server_id=server
         ) < get_highest_user_comm_allowance(self, member=member)
