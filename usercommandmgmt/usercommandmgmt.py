@@ -55,12 +55,14 @@ class Usercommandmgmt(CustomCommands):
                 return
             # marks command as created by admin in database, exempted from count
             self.activeDb.save_to_db(
-                command, ctx.message.author.id, True, ctx.message.guild
+                command, ctx.message.author.id, True, ctx.message.guild.id
             )
         # normal per-role allowance check and moderation process if user isnt an admin
         else:
             # checks if user has any capacity left to make commands based on their allowance
-            if not self.enforce_user_cmd_limit(ctx.message.author, ctx.message.guild):
+            if not self.enforce_user_cmd_limit(
+                ctx.message.author, ctx.message.guild.id
+            ):
                 await ctx.send(
                     "Sorry, you have already created the maximum number of commands allowed by your role"
                 )
@@ -81,7 +83,7 @@ class Usercommandmgmt(CustomCommands):
                 return
             # marks command as created by non-admin; counted as normal
             self.activeDb.save_to_db(
-                command, ctx.message.author.id, False, ctx.message.guild
+                command, ctx.message.author.id, False, ctx.message.guild.id
             )
 
     @customcom.command(name="delete", aliases=["del", "remove"])
@@ -204,5 +206,5 @@ class Usercommandmgmt(CustomCommands):
         returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
         """
         return self.activeDb.GetUserCommQuantity(
-            member.id, server_id=server
+            member.id, server_id=server.id
         ) < get_highest_user_comm_allowance(self, member=member)
