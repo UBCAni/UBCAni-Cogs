@@ -1,3 +1,5 @@
 .vscode
 env
 utils
+usercommandmgmt/__pycache__/
+*.pyc 

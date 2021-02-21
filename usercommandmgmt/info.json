@@ -1,0 +1,9 @@
+{
+    "AUTHOR" : ["UBC Anime Club"],
+    "SHORT" : "Custom user command management and moderation",
+    "DESCRIPTION" : "Enforces arbitrary user command limits and provides a means of moderating them",
+    "DISABLED" : false,
+    "NAME" : "User Command Management",
+    "TAGS" : ["utility"],
+    "INSTALL_MSG" : "Thank you for installing this cog."
+}
