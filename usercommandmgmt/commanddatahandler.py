@@ -5,7 +5,10 @@ import os
 
 
 class Database:
-    """database object; stores info for custom commands"""
+    """
+    database object.
+    stores info for custom commands
+    """
 
     def __init__(self, directory):
         super().__init__()
