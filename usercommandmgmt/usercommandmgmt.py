@@ -1,6 +1,7 @@
 from redbot.core import Config, checks, commands, data_manager
 from .configurable import *
 from .commanddatahandler import *
+import discord
 import inspect
 import sys
 import os
@@ -15,7 +16,7 @@ from redbot.cogs.customcom.customcom import (
 
 
 class Usercommandmgmt(CustomCommands):
-    """My custom cog"""
+    """Custom user command limit enforcements for user"""
 
     def __init__(self, bot):
         super().__init__(bot)
@@ -71,7 +72,7 @@ class Usercommandmgmt(CustomCommands):
             await ctx.send("Command request submitted")
 
             # if check is passed, the command is submitted to a specified moderation channel for evaluation
-            if not self.mod_evaluate_command(text):
+            if not await self.mod_evaluate_command(ctx, text):
                 await ctx.send(
                     "Sorry, your requested command was deemed inappopriate by moderator"
                 )
@@ -169,7 +170,14 @@ class Usercommandmgmt(CustomCommands):
             except CommandNotEdited:
                 pass
 
-    @staticmethod
+    def enforce_user_cmd_limit(self, member, server):
+        """
+        returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
+        """
+        return self.activeDb.get_user_comm_quantity(
+            member.id, server_id=server
+        ) < self.get_highest_user_comm_allowance(member)
+
     def get_highest_user_comm_allowance(self, member):
         """
         returns the highest number of custom commands permitted by the user's roles
@@ -186,25 +194,49 @@ class Usercommandmgmt(CustomCommands):
 
         return max(rel_usr_roles)
 
-    @staticmethod
-    def mod_evaluate_command(self, proposed_msg):
+    async def mod_evaluate_command(self, ctx, command):
         """
         posts the proposed command in the specified channel, and waits for a moderator's reaction to either
         reject or accept the command. Will  return true if command_moderation is set to False or command
-        passes moderator evalutaion. False if it is rejected by a moderator.
+        passes moderator evalaution. False if it is rejected by two moderators. Returns true if approved by two moderators
         Note: proposed_msg is the proposed command
         """
         if not command_moderation:
             return True
         else:
-            # submits command for evaluation and awaits response; TODO
-            pass
+            # create message to submit for mod approval
+            message_to_submit = (
+                "Sender: "
+                + ctx.author.name
+                + "\n"
+                + "Proposed Command: "
+                + "\n"
+                + command
+                + "\n \n"
+                + ctx.message.jump_url
+            )
 
-    @staticmethod
-    def enforce_user_cmd_limit(self, member, server):
+            # finds the channel to send this message to: the moderator one; specified in configurable.py
+            mod_channel = self.find_channel_by_name(
+                mod_channel_name, ctx.message.guild.channels
+            )
+            # submit proposed command and relavant info to specified moderation channel
+            await mod_channel.send(message_to_submit)
+            await ctx.send("moderation working")
+            # listen for reacts: :white_check_mark: :x:
+
+            # if sufficient reacts of either kind are read, then accepts (if the check mark) or rejects (if the x)
+
+            # submits command for evaluation and awaits response; TODO
+            return True
+
+    def find_channel_by_name(self, channel_name, channel_List):
         """
-        returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
+        finds the discord channel in the list with the given name, and returns it. Will return none if a channel can't be found
         """
-        return self.activeDb.GetUserCommQuantity(
-            member.id, server_id=server.id
-        ) < get_highest_user_comm_allowance(self, member=member)
+
+        for i in channel_List:
+            if i.name == channel_name:
+                return i
+
+        return None
