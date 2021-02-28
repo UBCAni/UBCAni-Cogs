@@ -222,7 +222,7 @@ class Usercommandmgmt(CustomCommands):
             )
             # submit proposed command and relavant info to specified moderation channel
             await mod_channel.send(message_to_submit)
-            await ctx.send("moderation working")
+
             # listen for reacts: :white_check_mark: :x:
 
             # if sufficient reacts of either kind are read, then accepts (if the check mark) or rejects (if the x)
