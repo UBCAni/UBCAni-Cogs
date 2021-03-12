@@ -1,0 +1,14 @@
+{
+    "author": [
+        "UBC Anime Club"
+    ],
+    "name": "reactionroles",
+    "short": "Reaction role menu",
+    "description": "Create a bot message that server users can react to in order to opt-in to certain server roles",
+    "end_user_data_statement": "No user data is stored",
+    "tags": [
+        "reaction",
+        "reactionroles",
+        "rolemenu"
+    ]
+}
