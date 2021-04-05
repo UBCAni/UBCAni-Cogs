@@ -71,9 +71,20 @@ class Usercommandmgmt(CustomCommands):
                     "Sorry, you have already created the maximum number of commands allowed by your role"
                 )
                 return
-            # regardless of the case, inform user about status of their command
-            await self.submit_for_approval(ctx, command, text)
-            await ctx.send("Command request submitted")
+            # inform user about status of their command
+            if command_moderation == True:
+                await self.submit_for_approval(ctx, command, text)
+                await ctx.send("Command request submitted")
+            else:
+                try:
+                    await ctx.invoke(self.cc_create_simple, command=command, text=text)
+                except:
+                    await ctx.send("something went wrong; could not add command")
+                    return
+                # marks command as created by non-admin; counted as normal
+                self.activeDb.save_to_db(
+                    command, ctx.message.author.id, False, ctx.message.guild.id
+                )
 
     @customcom.command(name="delete", aliases=["del", "remove"])
     async def cc_delete(self, ctx, command: str.lower):
@@ -224,6 +235,29 @@ class Usercommandmgmt(CustomCommands):
 
         return None
 
+    def find_command_req_data(self, msg):
+        """
+        finds the given command request data from the queue by matching its message with the given one
+        """
+        for req in self.create_comamnd_queue:
+            if msg == req[0]:
+                return req
+        return None
+
+    @commands.command()
+    async def command_count(self, ctx):
+        await ctx.send(
+            "You have assigned "
+            + str(
+                self.activeDb.get_user_comm_quantity(
+                    ctx.message.author.id, ctx.message.guild.id
+                )
+            )
+            + " out of "
+            + str(self.get_highest_user_comm_allowance(ctx.message.author))
+            + " commands available to you"
+        )
+
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         """
@@ -235,41 +269,62 @@ class Usercommandmgmt(CustomCommands):
             if payload.emoji.name == "✅" or payload.emoji.name == "❌":
                 message = await channel.fetch_message(payload.message_id)
                 reaction = get(message.reactions, emoji=payload.emoji.name)
-                if reaction and reaction.count >= 2:
+                if reaction and reaction.count >= 1 + number_of_mod_reacts_needed:
                     req_data = self.find_command_req_data(message)
                     # find the command data in queue, if none then do nothing
                     if req_data == None:
                         return
                     else:
                         if payload.emoji.name == "✅":
-                            print("approve")
+                            is_created = False
+                            try:
+                                await req_data[1].invoke(
+                                    self.cc_create_simple,
+                                    command=req_data[2],
+                                    text=req_data[3],
+                                )
+                                is_created = True
+                            except:
+                                req_data[1].message.author.send(
+                                    "command approved, but an error occured in creating it. Please try again"
+                                )
+                            if is_created:
+                                self.activeDb.save_to_db(
+                                    req_data[2],
+                                    req_data[1].message.author.id,
+                                    False,
+                                    req_data[1].message.guild.id,
+                                )
+                                await req_data[1].message.author.send(
+                                    "command successfully created!"
+                                    + "\n"
+                                    + "You can now use "
+                                    + ">"
+                                    + req_data[2]
+                                )
                         elif payload.emoji.name == "❌":
-                            print("deny")
+                            await req_data[1].message.author.send(
+                                "Sorry, your proposed command was deemed inapropriate by the moderators"
+                            )
+
                         del self.create_comamnd_queue[
                             self.create_comamnd_queue.index(req_data)
                         ]
 
-            # # if check is passed, the command is submitted to a specified moderation channel for evaluation
-            # if not await self.submit_for_approval(ctx, text):
-            #     await ctx.send(
-            #         "Sorry, your requested command was deemed inappopriate by moderator"
-            #     )
-            #     return
-            # try:
-            #     await ctx.invoke(self.cc_create_simple, command=command, text=text)
-            # except:
-            #     await ctx.send("something went wrong; could not add command")
-            #     return
-            # # marks command as created by non-admin; counted as normal
-            # self.activeDb.save_to_db(
-            #     command, ctx.message.author.id, False, ctx.message.guild.id
-            # )
 
-    def find_command_req_data(self, msg):
-        """
-        finds the given command request data from the queue by matching its message with the given one
-        """
-        for req in self.create_comamnd_queue:
-            if msg == req[0]:
-                return msg
-        return None
+# PLEASE SUGGEST REMOVAL ONLY IF CODE REVIEW PASSES; this implementation info is important
+# if check is passed, the command is submitted to a specified moderation channel for evaluation
+# if not await self.submit_for_approval(ctx, text):
+#     await ctx.send(
+#         "Sorry, your requested command was deemed inappopriate by moderator"
+#     )
+#     return
+# try:
+#     await ctx.invoke(self.cc_create_simple, command=command, text=text)
+# except:
+#     await ctx.send("something went wrong; could not add command")
+#     return
+# marks command as created by non-admin; counted as normal
+# self.activeDb.save_to_db(
+#     command, ctx.message.author.id, False, ctx.message.guild.id
+# )

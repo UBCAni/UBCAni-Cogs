@@ -9,3 +9,6 @@ command_moderation = True
 
 # the name of the channel used for moderation
 mod_channel_name = "usercommandmgmt-admin-approval"
+
+# the number of approvals and rejects needed to accept/reject a command request
+number_of_mod_reacts_needed = 2
