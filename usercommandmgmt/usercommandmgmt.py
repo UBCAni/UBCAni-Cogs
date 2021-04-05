@@ -2,6 +2,7 @@ from redbot.core import Config, checks, commands, data_manager
 from .configurable import *
 from .commanddatahandler import *
 import discord
+from discord.utils import get
 import inspect
 import sys
 import os
@@ -27,8 +28,10 @@ class Usercommandmgmt(CustomCommands):
             with open(saveFile, "w+") as f:
                 empty = {"db": []}
                 json.dump(empty, f)
-
         self.activeDb = Database(saveFile)
+        intents = discord.Intents.default()
+        intents.reactions = True
+        self.create_comamnd_queue = []
 
     @commands.group(aliases=["cc"])
     @commands.guild_only()
@@ -69,23 +72,8 @@ class Usercommandmgmt(CustomCommands):
                 )
                 return
             # regardless of the case, inform user about status of their command
+            await self.submit_for_approval(ctx, command, text)
             await ctx.send("Command request submitted")
-
-            # if check is passed, the command is submitted to a specified moderation channel for evaluation
-            if not await self.mod_evaluate_command(ctx, text):
-                await ctx.send(
-                    "Sorry, your requested command was deemed inappopriate by moderator"
-                )
-                return
-            try:
-                await ctx.invoke(self.cc_create_simple, command=command, text=text)
-            except:
-                await ctx.send("something went wrong; could not add command")
-                return
-            # marks command as created by non-admin; counted as normal
-            self.activeDb.save_to_db(
-                command, ctx.message.author.id, False, ctx.message.guild.id
-            )
 
     @customcom.command(name="delete", aliases=["del", "remove"])
     async def cc_delete(self, ctx, command: str.lower):
@@ -194,43 +182,38 @@ class Usercommandmgmt(CustomCommands):
 
         return max(rel_usr_roles)
 
-    async def mod_evaluate_command(self, ctx, command):
+    async def submit_for_approval(self, ctx, command, text):
         """
         posts the proposed command in the specified channel, and waits for a moderator's reaction to either
-        reject or accept the command. Will  return true if command_moderation is set to False or command
-        passes moderator evalaution. False if it is rejected by two moderators. Returns true if approved by two moderators
-        Note: proposed_msg is the proposed command
+        reject or accept the command.
         """
-        if not command_moderation:
-            return True
-        else:
-            # create message to submit for mod approval
-            message_to_submit = (
-                "Sender: "
-                + ctx.author.name
-                + "\n"
-                + "Proposed Command: "
-                + "\n"
-                + command
-                + "\n \n"
-                + ctx.message.jump_url
-            )
+        # create message to submit for mod approval
+        message_to_submit = (
+            "Sender: "
+            + ctx.author.name
+            + "\n"
+            + "Proposed Command: "
+            + "\n"
+            + command
+            + "\n"
+            + text
+            + "\n \n"
+            + ctx.message.jump_url
+        )
 
-            # finds the channel to send this message to: the moderator one; specified in configurable.py
-            mod_channel = self.find_channel_by_name(
-                mod_channel_name, ctx.message.guild.channels
-            )
-            # submit proposed command and relavant info to specified moderation channel
-            await mod_channel.send(message_to_submit)
-
-            # listen for reacts: :white_check_mark: :x:
-
-            # if sufficient reacts of either kind are read, then accepts (if the check mark) or rejects (if the x)
-
-            # submits command for evaluation and awaits response; TODO
-            return True
+        # finds the channel to send this message to: the moderator one; specified in configurable.py
+        mod_channel = self.find_channel_by_name(
+            mod_channel_name, ctx.message.guild.channels
+        )
+        # submit proposed command and relavant info to specified moderation channel
+        msg = await mod_channel.send(message_to_submit)
+        # adds reacts
+        await msg.add_reaction("✅")
+        await msg.add_reaction("❌")
+        self.create_comamnd_queue.append([msg, ctx, command, text])
 
     def find_channel_by_name(self, channel_name, channel_List):
+
         """
         finds the discord channel in the list with the given name, and returns it. Will return none if a channel can't be found
         """
@@ -239,4 +222,54 @@ class Usercommandmgmt(CustomCommands):
             if i.name == channel_name:
                 return i
 
+        return None
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        """
+        listens for reacts on the mod channel
+        """
+        channel = self.bot.get_channel(payload.channel_id)
+
+        if mod_channel_name == channel.name:
+            if payload.emoji.name == "✅" or payload.emoji.name == "❌":
+                message = await channel.fetch_message(payload.message_id)
+                reaction = get(message.reactions, emoji=payload.emoji.name)
+                if reaction and reaction.count >= 2:
+                    req_data = self.find_command_req_data(message)
+                    # find the command data in queue, if none then do nothing
+                    if req_data == None:
+                        return
+                    else:
+                        if payload.emoji.name == "✅":
+                            print("approve")
+                        elif payload.emoji.name == "❌":
+                            print("deny")
+                        del self.create_comamnd_queue[
+                            self.create_comamnd_queue.index(req_data)
+                        ]
+
+            # # if check is passed, the command is submitted to a specified moderation channel for evaluation
+            # if not await self.submit_for_approval(ctx, text):
+            #     await ctx.send(
+            #         "Sorry, your requested command was deemed inappopriate by moderator"
+            #     )
+            #     return
+            # try:
+            #     await ctx.invoke(self.cc_create_simple, command=command, text=text)
+            # except:
+            #     await ctx.send("something went wrong; could not add command")
+            #     return
+            # # marks command as created by non-admin; counted as normal
+            # self.activeDb.save_to_db(
+            #     command, ctx.message.author.id, False, ctx.message.guild.id
+            # )
+
+    def find_command_req_data(self, msg):
+        """
+        finds the given command request data from the queue by matching its message with the given one
+        """
+        for req in self.create_comamnd_queue:
+            if msg == req[0]:
+                return msg
         return None
