@@ -290,9 +290,9 @@ class Usercommandmgmt(CustomCommands):
         sets command_moderation to false if true, and vice versa
         """
         message = ctx.message.split(" ")
-        if len(message) > 1:
+        if len(message) == 2:
             if (
-                find_channel_by_name(
+                self.find_channel_by_name(
                     message[1],
                 )
                 != None
@@ -312,7 +312,7 @@ class Usercommandmgmt(CustomCommands):
         """
         newAmt = None
         message = ctx.message.split(" ")
-        if len(message):
+        if len(message) == 2:
             try:
                 newAmt = int(message[1])
                 if newAmt >= 1:
@@ -327,6 +327,27 @@ class Usercommandmgmt(CustomCommands):
                 ctx.send("invalid number.")
         else:
             ctx.send("you must provide a number")
+
+    @checks.mod_or_permissions(administrator=True)
+    @commands.command()
+    async def addallowancedrole(self, ctx):
+        """
+        adds a new allowance setting for a role in the dictionary with the given allowance, if it doesn't already exist. Allowance must be >= 1
+        """
+
+    @checks.mod_or_permissions(administrator=True)
+    @commands.command()
+    async def removeallowancedrole(self, ctx):
+        """
+        removes an allowance setting for a role in the dictionary, if it exists
+        """
+
+    @checks.mod_or_permissions(administrator=True)
+    @commands.command()
+    async def changeroleallowance(self, ctx):
+        """
+        changes role allowance to the given number for the given role. Must be greater or equal to 1
+        """
 
     # helper functions
     def enforce_user_cmd_limit(self, member, server):
