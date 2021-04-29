@@ -33,6 +33,7 @@ class Usercommandmgmt(CustomCommands):
         intents.reactions = True
         self.create_command_queue = {}
 
+    # cc commmands
     @commands.group(aliases=["cc"])
     @commands.guild_only()
     async def customcom(self, ctx: commands.Context):
@@ -200,19 +201,7 @@ class Usercommandmgmt(CustomCommands):
         self.create_command_queue.append([msg, ctx, command, text])
         self.create_command_queue[msg] = [ctx, command, text]
 
-    @commands.command()
-    async def command_count(self, ctx):
-        currently_used = self.activeDb.get_user_comm_quantity(
-            ctx.message.author.id, ctx.message.guild.id
-        )
-        current_max = self.get_highest_user_comm_allowance(ctx.message.author)
-
-        MESSAGE_TEMPLATE = """You have assigned {currrent_amt} out of {max_amt} commands available to you"""
-
-        msg = MESSAGE_TEMPLATE.format(currrent_amt=currently_used, max_amt=current_max)
-
-        await ctx.send(msg)
-
+    # reaction listener
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         """
@@ -267,6 +256,79 @@ class Usercommandmgmt(CustomCommands):
 
                         self.create_command_queue.pop(message)
 
+    # utility commands for users
+    @commands.command()
+    async def command_count(self, ctx):
+        """
+        gets the number of commands created by the caller of this command
+        """
+        currently_used = self.activeDb.get_user_comm_quantity(
+            ctx.message.author.id, ctx.message.guild.id
+        )
+        current_max = self.get_highest_user_comm_allowance(ctx.message.author)
+
+        MESSAGE_TEMPLATE = """You have assigned {currrent_amt} out of {max_amt} commands available to you"""
+
+        msg = MESSAGE_TEMPLATE.format(currrent_amt=currently_used, max_amt=current_max)
+
+        await ctx.send(msg)
+
+    # utility commands for moderators
+    @checks.mod_or_permissions(administrator=True)
+    @commands.command()
+    async def togglemoderation(self, ctx):
+        """
+        sets command_moderation to false if true, and vice versa
+        """
+        command_moderation = True if not command_moderation else False
+        ctx.send("""Command moderation has been set to {command_moderation}""")
+
+    @checks.mod_or_permissions(administrator=True)
+    @commands.command()
+    async def setmodchannel(self, ctx):
+        """
+        sets command_moderation to false if true, and vice versa
+        """
+        message = ctx.message.split(" ")
+        if len(message) > 1:
+            if (
+                find_channel_by_name(
+                    message[1],
+                )
+                != None
+            ):
+                mod_channel_name = message[1]
+                ctx.send("""Mod channel set to {mod_channel_name}""")
+            else:
+                ctx.send("No channel with that name was found on this server")
+        else:
+            ctx.send("you must provide a channel name to set")
+
+    @checks.mod_or_permissions(administrator=True)
+    @commands.command()
+    async def setapprovalreq(self, ctx):
+        """
+        sets command_moderation to false if true, and vice versa. Number must be > 1, otherwise does nothing and alerts user
+        """
+        newAmt = None
+        message = ctx.message.split(" ")
+        if len(message):
+            try:
+                newAmt = int(message[1])
+                if newAmt >= 1:
+                    number_of_mod_reacts_needed = newAmt
+                    total_reacts_needed = number_of_mod_reacts_needed + 1
+                    ctx.send(
+                        """{total_reacts_needed} reacts are needed to confirm or reject a command now"""
+                    )
+                else:
+                    ctx.send("You must enter a number greater or equal than 1")
+            except:
+                ctx.send("invalid number.")
+        else:
+            ctx.send("you must provide a number")
+
+    # helper functions
     def enforce_user_cmd_limit(self, member, server):
         """
         returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
