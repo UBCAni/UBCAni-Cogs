@@ -169,30 +169,6 @@ class Usercommandmgmt(CustomCommands):
             except CommandNotEdited:
                 pass
 
-    def enforce_user_cmd_limit(self, member, server):
-        """
-        returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
-        """
-        return self.activeDb.get_user_comm_quantity(
-            member.id, server_id=server
-        ) < self.get_highest_user_comm_allowance(member)
-
-    def get_highest_user_comm_allowance(self, member):
-        """
-        returns the highest number of custom commands permitted by the user's roles
-        """
-        # all of the given user's roles
-        usr_roles = member.roles
-        # the user's roles that confer different command allowances
-        rel_usr_roles = [0]
-
-        for cmd in usr_roles:
-            allowance = role_cmd_limits.get(cmd.name, 0)
-            if allowance != 0:
-                rel_usr_roles.append(allowance)
-
-        return max(rel_usr_roles)
-
     async def submit_for_approval(self, ctx, command, text):
         """
         posts the proposed command in the specified channel, and waits for a moderator's reaction to either
@@ -223,18 +199,6 @@ class Usercommandmgmt(CustomCommands):
         await msg.add_reaction("❌")
         self.create_command_queue.append([msg, ctx, command, text])
         self.create_command_queue[msg] = [ctx, command, text]
-
-    def find_channel_by_name(self, channel_name, channel_List):
-
-        """
-        finds the discord channel in the list with the given name, and returns it. Will return none if a channel can't be found
-        """
-
-        for i in channel_List:
-            if i.name == channel_name:
-                return i
-
-        return None
 
     @commands.command()
     async def command_count(self, ctx):
@@ -302,3 +266,48 @@ class Usercommandmgmt(CustomCommands):
                             )
 
                         self.create_command_queue.pop(message)
+
+    def enforce_user_cmd_limit(self, member, server):
+        """
+        returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
+        """
+        return self.activeDb.get_user_comm_quantity(
+            member.id, server_id=server
+        ) < self.get_highest_user_comm_allowance(member)
+
+    def get_highest_user_comm_allowance(self, member):
+        """
+        returns the highest number of custom commands permitted by the user's roles
+        """
+        # all of the given user's roles
+        usr_roles = member.roles
+        # the user's roles that confer different command allowances
+        rel_usr_roles = [0]
+
+        for cmd in usr_roles:
+            allowance = role_cmd_limits.get(cmd.name, 0)
+            if allowance != 0:
+                rel_usr_roles.append(allowance)
+
+        return max(rel_usr_roles)
+
+    def find_channel_by_name(self, channel_name, channel_List):
+
+        """
+        finds the discord channel in the list with the given name, and returns it. Will return none if a channel can't be found
+        """
+
+        for i in channel_List:
+            if i.name == channel_name:
+                return i
+
+        return None
+
+    def find_command_req_data(self, msg):
+        """
+        finds the given command request data from the queue by matching its message with the given one
+        """
+        for req in self.create_command_queue:
+            if msg == req[0]:
+                return req
+        return None
