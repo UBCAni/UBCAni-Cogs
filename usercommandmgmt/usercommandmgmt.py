@@ -31,7 +31,7 @@ class Usercommandmgmt(CustomCommands):
         self.activeDb = Database(saveFile)
         intents = discord.Intents.default()
         intents.reactions = True
-        self.create_command_queue = []
+        self.create_command_queue = {}
 
     @commands.group(aliases=["cc"])
     @commands.guild_only()
@@ -236,15 +236,6 @@ class Usercommandmgmt(CustomCommands):
 
         return None
 
-    def find_command_req_data(self, msg):
-        """
-        finds the given command request data from the queue by matching its message with the given one
-        """
-        for req in self.create_command_queue:
-            if msg == req[0]:
-                return req
-        return None
-
     @commands.command()
     async def command_count(self, ctx):
         currently_used = self.activeDb.get_user_comm_quantity(
@@ -310,6 +301,4 @@ class Usercommandmgmt(CustomCommands):
                                 "Sorry, your proposed command was deemed inappropriate by the moderators"
                             )
 
-                        del self.create_command_queue[
-                            self.create_command_queue.index(req_data)
-                        ]
+                        self.create_command_queue.pop(message)
