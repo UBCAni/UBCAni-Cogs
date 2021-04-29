@@ -222,6 +222,7 @@ class Usercommandmgmt(CustomCommands):
         await msg.add_reaction("✅")
         await msg.add_reaction("❌")
         self.create_command_queue.append([msg, ctx, command, text])
+        self.create_command_queue[msg] = [ctx, command, text]
 
     def find_channel_by_name(self, channel_name, channel_List):
 
@@ -269,7 +270,7 @@ class Usercommandmgmt(CustomCommands):
                 message = await channel.fetch_message(payload.message_id)
                 reaction = get(message.reactions, emoji=payload.emoji.name)
                 if reaction and reaction.count >= 1 + number_of_mod_reacts_needed:
-                    req_data = self.find_command_req_data(message)
+                    req_data = self.create_command_queue.get(message)
                     # find the command data in queue, if none then do nothing
                     if req_data == None:
                         return
@@ -277,22 +278,22 @@ class Usercommandmgmt(CustomCommands):
                         if payload.emoji.name == "✅":
                             is_created = False
                             try:
-                                await req_data[1].invoke(
+                                await req_data[0].invoke(
                                     self.cc_create_simple,
-                                    command=req_data[2],
-                                    text=req_data[3],
+                                    command=req_data[1],
+                                    text=req_data[2],
                                 )
                                 is_created = True
                             except:
-                                req_data[1].message.author.send(
+                                req_data[0].message.author.send(
                                     "command approved, but an error occured in creating it. Please try again"
                                 )
                             if is_created:
                                 self.activeDb.save_to_db(
-                                    req_data[2],
-                                    req_data[1].message.author.id,
+                                    req_data[1],
+                                    req_data[0].message.author.id,
                                     False,
-                                    req_data[1].message.guild.id,
+                                    req_data[0].message.guild.id,
                                 )
 
                                 MESSAGE_TEMPLATE = """command successfully created!: 
@@ -302,10 +303,10 @@ class Usercommandmgmt(CustomCommands):
                                 can_use_alert = MESSAGE_TEMPLATE.format(
                                     command=req_data[2]
                                 )
-                                await req_data[1].message.author.send(can_use_alert)
+                                await req_data[0].message.author.send(can_use_alert)
 
                         elif payload.emoji.name == "❌":
-                            await req_data[1].message.author.send(
+                            await req_data[0].message.author.send(
                                 "Sorry, your proposed command was deemed inappropriate by the moderators"
                             )
 
