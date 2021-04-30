@@ -43,49 +43,49 @@ class Config:
         """
         sets command_moderation to the new and updates the config file
         """
-        self.loaded_cmd_data.update({"command_moderation", new_state})
-        save_state_to_file()
+        self.loaded_cmd_data.update({"command_moderation": new_state})
+        self.save_state_to_file()
 
     def set_mod_channel_name(self, new_name):
         """
         sets the mod channel name to the new name and updates the config file
         """
-        self.loaded_cmd_data.update({"mod_channel_name", new_name})
-        save_state_to_file()
+        self.loaded_cmd_data.update({"mod_channel_name": new_name})
+        self.save_state_to_file()
 
     def set_reacts_needed(self, new_amt):
         """
         sets the number of needed reacts for approval/rejection to new_amt and updates the config file
         """
-        self.loaded_cmd_data.update({"number_of_mod_reacts_needed", new_amt})
-        save_state_to_file()
+        self.loaded_cmd_data.update({"number_of_mod_reacts_needed": new_amt})
+        self.save_state_to_file()
 
     def add_role_allowance(self, role_name, allowance):
         """
         adds a new role and its associated allowance to the configuration
         """
         self.loaded_cmd_data[role_name] = allowance
-        save_state_to_file()
+        self.save_state_to_file()
 
     def del_role_allowance(self, role_name):
         """
         removes a role and its allowance from the configuration
         """
         self.loaded_cmd_data.pop(role_name)
-        save_state_to_file()
+        self.save_state_to_file()
 
     def change_role_allowance(self, role_name, new_allowance):
         """
         gives the given role_name a new allowance in the configuration
         """
-        self.loaded_cmd_data.get("role_cmd_limits").update({role_name, new_allowance})
-        save_state_to_file()
+        self.loaded_cmd_data.get("role_cmd_limits").update({role_name: new_allowance})
+        self.save_state_to_file()
 
     def get_role_list(self):
         """
         returns a list of roles and their allowances
         """
-        return self.loaded_cmd_data.get("role_cmd_limits")
+        return self.loaded_cmd_data.get("role_cmd_limits")[0]
 
     def is_mod_enabled(self):
         """
@@ -103,4 +103,4 @@ class Config:
         """
         returns the amount of reacts needed to approve/reject a command request
         """
-        return self.loaded_cmd_data("number_of_mod_reacts_needed")
+        return self.loaded_cmd_data.get("number_of_mod_reacts_needed")
