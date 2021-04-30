@@ -21,14 +21,33 @@ class Usercommandmgmt(CustomCommands):
 
     def __init__(self, bot):
         super().__init__(bot)
-        saveFile = os.path.join(
+        save_file = os.path.join(
             data_manager.cog_data_path(cog_instance=self), "user commands.json"
         )
-        if not os.path.isfile(saveFile):
-            with open(saveFile, "w+") as f:
+
+        config_file = os.path.join(
+            data_manager.cog_data_path(cog_instance=self), "config.json"
+        )
+
+        if not os.path.isfile(save_file):
+            with open(save_file, "w+") as f:
                 empty = {"db": []}
-                json.dump(empty, f)
-        self.activeDb = Database(saveFile)
+                json.dump(empty, f, indent=2)
+
+        if not os.path.isfile(config_file):
+            with open(config_file, "w+") as f:
+                default = {
+                    "role_cmd_limits": [
+                        {"Tier 1 Simp": 1, "Tier 2 Simp": 3, "Tier 3 Simp": 5}
+                    ],
+                    "command_moderation": True,
+                    "mod_channel_name": "usercommandmgmt-admin-approval",
+                    "number_of_mod_reacts_needed": 2,
+                }
+                json.dump(default, f, indent=2)
+
+        self.config = Config(config_file)
+        self.activeDb = Database(save_file)
         intents = discord.Intents.default()
         intents.reactions = True
         self.create_command_queue = {}
@@ -73,7 +92,7 @@ class Usercommandmgmt(CustomCommands):
                 )
                 return
             # inform user about status of their command
-            if command_moderation:
+            if self.config.is_mod_enabled:
                 await self.submit_for_approval(ctx, command, text)
                 await ctx.send("Command request submitted")
             else:
@@ -191,7 +210,7 @@ class Usercommandmgmt(CustomCommands):
 
         # finds the channel to send this message to: the moderator one; specified in configurable.py
         mod_channel = self.find_channel_by_name(
-            mod_channel_name, ctx.message.guild.channels
+            self.config.get_mod_channel_name, ctx.message.guild.channels
         )
         # submit proposed command and relavant info to specified moderation channel
         msg = await mod_channel.send(message_to_submit)
@@ -209,11 +228,11 @@ class Usercommandmgmt(CustomCommands):
         """
         channel = self.bot.get_channel(payload.channel_id)
 
-        if mod_channel_name == channel.name:
+        if self.config.get_mod_channel_name == channel.name:
             if payload.emoji.name == "✅" or payload.emoji.name == "❌":
                 message = await channel.fetch_message(payload.message_id)
                 reaction = get(message.reactions, emoji=payload.emoji.name)
-                if reaction and reaction.count >= 1 + number_of_mod_reacts_needed:
+                if reaction and reaction.count >= 1 + self.config.get_reacts_needed:
                     req_data = self.create_command_queue.get(message)
                     # find the command data in queue, if none then do nothing
                     if req_data == None:
@@ -280,8 +299,6 @@ class Usercommandmgmt(CustomCommands):
         """
         sets command_moderation to false if true, and vice versa
         """
-        command_moderation = True if not command_moderation else False
-        ctx.send("""Command moderation has been set to {command_moderation}""")
 
     @checks.mod_or_permissions(administrator=True)
     @commands.command()
@@ -289,20 +306,6 @@ class Usercommandmgmt(CustomCommands):
         """
         sets command_moderation to false if true, and vice versa
         """
-        message = ctx.message.split(" ")
-        if len(message) == 2:
-            if (
-                self.find_channel_by_name(
-                    message[1],
-                )
-                != None
-            ):
-                mod_channel_name = message[1]
-                ctx.send("""Mod channel set to {mod_channel_name}""")
-            else:
-                ctx.send("No channel with that name was found on this server")
-        else:
-            ctx.send("you must provide a channel name to set")
 
     @checks.mod_or_permissions(administrator=True)
     @commands.command()
@@ -310,23 +313,6 @@ class Usercommandmgmt(CustomCommands):
         """
         sets command_moderation to false if true, and vice versa. Number must be > 1, otherwise does nothing and alerts user
         """
-        newAmt = None
-        message = ctx.message.split(" ")
-        if len(message) == 2:
-            try:
-                newAmt = int(message[1])
-                if newAmt >= 1:
-                    number_of_mod_reacts_needed = newAmt
-                    total_reacts_needed = number_of_mod_reacts_needed + 1
-                    ctx.send(
-                        """{total_reacts_needed} reacts are needed to confirm or reject a command now"""
-                    )
-                else:
-                    ctx.send("You must enter a number greater or equal than 1")
-            except:
-                ctx.send("invalid number.")
-        else:
-            ctx.send("you must provide a number")
 
     @checks.mod_or_permissions(administrator=True)
     @commands.command()
@@ -366,9 +352,8 @@ class Usercommandmgmt(CustomCommands):
         usr_roles = member.roles
         # the user's roles that confer different command allowances
         rel_usr_roles = [0]
-
         for cmd in usr_roles:
-            allowance = role_cmd_limits.get(cmd.name, 0)
+            allowance = self.config.get_role_list.get(cmd.name, 0)
             if allowance != 0:
                 rel_usr_roles.append(allowance)
 
