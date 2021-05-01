@@ -21,21 +21,21 @@ class Usercommandmgmt(CustomCommands):
 
     def __init__(self, bot):
         super().__init__(bot)
-        save_file = os.path.join(
+        self.save_file = os.path.join(
             data_manager.cog_data_path(cog_instance=self), "user commands.json"
         )
 
-        config_file = os.path.join(
+        self.config_file = os.path.join(
             data_manager.cog_data_path(cog_instance=self), "config.json"
         )
 
-        if not os.path.isfile(save_file):
-            with open(save_file, "w+") as f:
+        if not os.path.isfile(self.save_file):
+            with open(self.save_file, "w+") as f:
                 empty = {"db": []}
                 json.dump(empty, f, indent=2)
 
-        if not os.path.isfile(config_file):
-            with open(config_file, "w+") as f:
+        if not os.path.isfile(self.config_file):
+            with open(self.config_file, "w+") as f:
                 default = {
                     "role_cmd_limits": [
                         {"Tier 1 Simp": 1, "Tier 2 Simp": 3, "Tier 3 Simp": 5}
@@ -46,8 +46,8 @@ class Usercommandmgmt(CustomCommands):
                 }
                 json.dump(default, f, indent=2)
 
-        self.config = Config(config_file)
-        self.activeDb = Database(save_file)
+        self.mod_config = Config(self.config_file)
+        self.activeDb = Database(self.save_file)
         intents = discord.Intents.default()
         intents.reactions = True
         self.create_command_queue = {}
@@ -96,7 +96,7 @@ class Usercommandmgmt(CustomCommands):
                 )
                 return
             # inform user about status of their command
-            if self.config.is_mod_enabled():
+            if self.mod_config.is_mod_enabled():
                 await self.submit_for_approval(ctx, command, text)
                 await ctx.send("Command request submitted")
             else:
@@ -214,14 +214,13 @@ class Usercommandmgmt(CustomCommands):
 
         # finds the channel to send this message to: the moderator one; specified in configurable.py
         mod_channel = self.find_channel_by_name(
-            self.config.get_mod_channel_name(), ctx.message.guild.channels
+            self.mod_config.get_mod_channel_name(), ctx.message.guild.channels
         )
         # submit proposed command and relavant info to specified moderation channel
         msg = await mod_channel.send(message_to_submit)
         # adds reacts
         await msg.add_reaction("✅")
         await msg.add_reaction("❌")
-        self.create_command_queue.append([msg, ctx, command, text])
         self.create_command_queue[msg] = [ctx, command, text]
 
     # reaction listener
@@ -232,11 +231,14 @@ class Usercommandmgmt(CustomCommands):
         """
         channel = self.bot.get_channel(payload.channel_id)
 
-        if self.config.get_mod_channel_name() == channel.name:
+        if self.mod_config.get_mod_channel_name() == channel.name:
             if payload.emoji.name == "✅" or payload.emoji.name == "❌":
                 message = await channel.fetch_message(payload.message_id)
                 reaction = get(message.reactions, emoji=payload.emoji.name)
-                if reaction and reaction.count >= 1 + self.config.get_reacts_needed():
+                if (
+                    reaction
+                    and reaction.count >= 1 + self.mod_config.get_reacts_needed()
+                ):
                     req_data = self.create_command_queue.get(message)
                     # find the command data in queue, if none then do nothing
                     if req_data == None:
@@ -303,9 +305,9 @@ class Usercommandmgmt(CustomCommands):
         """
         sets command_moderation to false if true, and vice versa
         """
-        new_state = True if not self.config.is_mod_enabled() else False
-        self.config.set_command_moderation(new_state)
-        await ctx.send("moderation set to " + str(self.config.is_mod_enabled()))
+        new_state = True if not self.mod_config.is_mod_enabled() else False
+        self.mod_config.set_command_moderation(new_state)
+        await ctx.send("moderation set to " + str(self.mod_config.is_mod_enabled()))
 
     @checks.mod_or_permissions(administrator=True)
     @commands.command()
@@ -314,8 +316,10 @@ class Usercommandmgmt(CustomCommands):
         sets the name of the mod channel to to channel_name in the configuration
         """
         if self.find_channel_by_name(channel_name, ctx.message.guild.channels):
-            self.config.set_mod_channel_name(channel_name)
-            await ctx.send("mod channel set to #" + self.config.get_mod_channel_name())
+            self.mod_config.set_mod_channel_name(channel_name)
+            await ctx.send(
+                "mod channel set to #" + self.mod_config.get_mod_channel_name()
+            )
         else:
             await ctx.send("Could not find a channel with that name")
 
@@ -328,9 +332,10 @@ class Usercommandmgmt(CustomCommands):
         if new_req < 1:
             await ctx.send("You must provide a number >=1")
         else:
-            self.config.set_reacts_needed(new_req)
+            self.mod_config.set_reacts_needed(new_req)
             await ctx.send(
-                "Reaction requirement set to " + str(self.config.get_reacts_needed())
+                "Reaction requirement set to "
+                + str(self.mod_config.get_reacts_needed())
             )
 
     @checks.mod_or_permissions(administrator=True)
@@ -339,11 +344,11 @@ class Usercommandmgmt(CustomCommands):
         """
         adds a new allowance setting for a role in the dictionary with the given allowance, if it doesn't already exist. Allowance must be >= 1
         """
-        if self.config.get_role_list.get(new_role) == None:
+        if self.mod_config.get_role_list.get(new_role) == None:
             if allowance < 1:
                 await ctx.send("you must provide a number >= 1")
             else:
-                self.config.add_role_allowance(new_role, allowance)
+                self.mod_config.add_role_allowance(new_role, allowance)
                 await ctx.send(
                     "Allowance of " + str(allowance) + " has been set for " + new_role
                 )
@@ -356,10 +361,10 @@ class Usercommandmgmt(CustomCommands):
         """
         removes an allowance setting for a role in the dictionary, if it exists
         """
-        if self.config.get_role_list.get(role_to_delete) == None:
+        if self.mod_config.get_role_list.get(role_to_delete) == None:
             await ctx.send("That role has no defined allowance")
         else:
-            self.config.del_role_allowance(role_to_delete)
+            self.mod_config.del_role_allowance(role_to_delete)
             await ctx.send(
                 "Allowance settings for " + role_to_delete + " role cleareds"
             )
@@ -370,10 +375,10 @@ class Usercommandmgmt(CustomCommands):
         """
         changes role allowance to the given number for the given role. Must be greater or equal to 1
         """
-        if self.config.get_role_list.get(role) == None:
+        if self.mod_config.get_role_list.get(role) == None:
             await ctx.send("Could not find the command you specified")
         else:
-            self.config.change_role_allowance(role, new_allowance)
+            self.mod_config.change_role_allowance(role, new_allowance)
             await ctx.send(
                 "New Allowance of " + str(new_allowance) + " set for " + role
             )
@@ -396,7 +401,7 @@ class Usercommandmgmt(CustomCommands):
         # the user's roles that confer different command allowances
         rel_usr_roles = [0]
         for cmd in usr_roles:
-            allowance = self.config.get_role_list().get(cmd.name, 0)
+            allowance = self.mod_config.get_role_list().get(cmd.name, 0)
             if allowance != 0:
                 rel_usr_roles.append(allowance)
 
