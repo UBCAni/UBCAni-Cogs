@@ -265,9 +265,7 @@ class Usercommandmgmt(CustomCommands):
                                     req_data[0].message.guild.id,
                                 )
 
-                                MESSAGE_TEMPLATE = """command successfully created!: 
-                                You can now use >: {command}
-                                """
+                                MESSAGE_TEMPLATE = """command successfully created!: You can now use :> {command}"""
 
                                 can_use_alert = MESSAGE_TEMPLATE.format(
                                     command=req_data[2]
