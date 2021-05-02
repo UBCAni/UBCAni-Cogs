@@ -6,6 +6,7 @@ from discord.utils import get
 import inspect
 import sys
 import os
+import pickle
 from redbot.cogs.customcom import CustomCommands
 from redbot.cogs.customcom.customcom import (
     CustomCommands,
@@ -14,6 +15,30 @@ from redbot.cogs.customcom.customcom import (
     ArgParseError,
     CommandNotEdited,
 )
+
+
+class CCError(Exception):
+    pass
+
+
+class AlreadyExists(CCError):
+    pass
+
+
+class ArgParseError(CCError):
+    pass
+
+
+class NotFound(CCError):
+    pass
+
+
+class OnCooldown(CCError):
+    pass
+
+
+class CommandNotEdited(CCError):
+    pass
 
 
 class Usercommandmgmt(CustomCommands):
@@ -27,6 +52,10 @@ class Usercommandmgmt(CustomCommands):
 
         self.config_file = os.path.join(
             data_manager.cog_data_path(cog_instance=self), "config.json"
+        )
+
+        self.queue_cache = os.path.join(
+            data_manager.cog_data_path(cog_instance=self), "queue.p"
         )
 
         if not os.path.isfile(self.save_file):
@@ -51,6 +80,20 @@ class Usercommandmgmt(CustomCommands):
         intents = discord.Intents.default()
         intents.reactions = True
         self.create_command_queue = {}
+        self.commandobj = CommandObjMod(
+            config=self.config, bot=self.bot, database=self.activeDb
+        )
+
+        if not os.path.isfile(self.queue_cache):
+            with open(self.queue_cache, "wb") as f:
+                pickle.dump(self.create_command_queue, f)
+        elif os.path.getsize(self.queue_cache) > 0:
+            with open(self.queue_cache, "rb") as f:
+                self.create_command_queue = pickle.load(f)
+        else:
+            """
+            no need to do anything
+            """
 
     @commands.command()
     async def test(self, ctx, echo: str, echo2: str):
@@ -77,14 +120,17 @@ class Usercommandmgmt(CustomCommands):
             await ctx.send("Admin request detected. Bypassing checks")
             # custom command is created and the entry is added to the database
             try:
-                await ctx.invoke(self.cc_create_simple, command=command, text=text)
+                await self.cc_create_simple_modified(
+                    command,
+                    text,
+                    ctx.message.id,
+                    ctx.message.channel.id,
+                    ctx.message.channel.guild.id,
+                    False,
+                )
             except:
                 await ctx.send("something went wrong; could not add command")
                 return
-            # marks command as created by admin in database, exempted from count
-            self.activeDb.save_to_db(
-                command, ctx.message.author.id, True, ctx.message.guild.id
-            )
         # normal per-role allowance check and moderation process if user isnt an admin
         else:
             # checks if user has any capacity left to make commands based on their allowance
@@ -101,14 +147,17 @@ class Usercommandmgmt(CustomCommands):
                 await ctx.send("Command request submitted")
             else:
                 try:
-                    await ctx.invoke(self.cc_create_simple, command=command, text=text)
+                    await self.cc_create_simple_modified(
+                        command,
+                        text,
+                        ctx.message.id,
+                        ctx.message.channel.id,
+                        ctx.message.channel.guild.id,
+                        False,
+                    )
                 except:
                     await ctx.send("something went wrong; could not add command")
                     return
-                # marks command as created by non-admin; counted as normal
-                self.activeDb.save_to_db(
-                    command, ctx.message.author.id, False, ctx.message.guild.id
-                )
 
     @customcom.command(name="delete", aliases=["del", "remove"])
     async def cc_delete(self, ctx, command: str.lower):
@@ -221,7 +270,14 @@ class Usercommandmgmt(CustomCommands):
         # adds reacts
         await msg.add_reaction("✅")
         await msg.add_reaction("❌")
-        self.create_command_queue[msg] = [ctx, command, text]
+        self.create_command_queue[msg.id] = [
+            command,
+            text,
+            ctx.message.id,
+            ctx.message.channel.id,
+        ]
+        with open(self.queue_cache, "wb") as f:
+            pickle.dump(self.create_command_queue, f)
 
     # reaction listener
     @commands.Cog.listener()
@@ -239,45 +295,36 @@ class Usercommandmgmt(CustomCommands):
                     reaction
                     and reaction.count >= 1 + self.mod_config.get_reacts_needed()
                 ):
-                    req_data = self.create_command_queue.get(message)
+                    req_data = self.create_command_queue.get(message.id)
                     # find the command data in queue, if none then do nothing
                     if req_data == None:
                         return
                     else:
+                        original_channel = self.bot.get_channel(req_data[3])
+                        original_request_message = await original_channel.fetch_message(
+                            req_data[2]
+                        )
+
                         if payload.emoji.name == "✅":
-                            is_created = False
                             try:
-                                await req_data[0].invoke(
-                                    self.cc_create_simple,
-                                    command=req_data[1],
-                                    text=req_data[2],
-                                )
-                                is_created = True
-                            except:
-                                req_data[0].message.author.send(
-                                    "command approved, but an error occured in creating it. Please try again"
-                                )
-                            if is_created:
-                                self.activeDb.save_to_db(
+                                await self.cc_create_simple_modified(
+                                    req_data[0],
                                     req_data[1],
-                                    req_data[0].message.author.id,
+                                    req_data[2],
+                                    original_request_message.channel.id,
+                                    channel.guild.id,
                                     False,
-                                    req_data[0].message.guild.id,
                                 )
-
-                                MESSAGE_TEMPLATE = """command successfully created!: You can now use :> {command}"""
-
-                                can_use_alert = MESSAGE_TEMPLATE.format(
-                                    command=req_data[2]
+                            except:
+                                await original_request_message.author.send(
+                                    "Your command proposal was accepted, but something went wrong with command creation, please try again"
                                 )
-                                await req_data[0].message.author.send(can_use_alert)
-
                         elif payload.emoji.name == "❌":
-                            await req_data[0].message.author.send(
+                            await original_request_message.author.send(
                                 "Sorry, your proposed command was deemed inappropriate by the moderators"
                             )
 
-                        self.create_command_queue.pop(message)
+                        self.create_command_queue.pop(message.id)
 
     # utility commands for users
     @commands.command()
@@ -414,14 +461,73 @@ class Usercommandmgmt(CustomCommands):
         for i in channel_List:
             if i.name == channel_name:
                 return i
-
         return None
 
-    def find_command_req_data(self, msg):
+    async def cc_create_simple_modified(
+        self, command, text, message_id, channel_id, guild_id, made_by_admin
+    ):
+        """Add a simple custom command.
+        Example:
+            - `[p]customcom create simple yourcommand Text you want`
+        **Arguments:**
+        - `<command>` The command executed to return the text. Cast to lowercase.
+        - `<text>` The text to return when executing the command. See guide for enhanced usage.
         """
-        finds the given command request data from the queue by matching its message with the given one
-        """
-        for req in self.create_command_queue:
-            if msg == req[0]:
-                return req
-        return None
+        guild = self.bot.get_guild(guild_id)
+        channel = self.bot.get_channel(channel_id)
+        message = await channel.fetch_message(message_id)
+        user = message.author
+
+        if any(char.isspace() for char in command):
+            # Haha, nice try
+            await user.send("Custom command names cannot have spaces in them.")
+            return
+        if command in (*self.bot.all_commands, *commands.RESERVED_COMMAND_NAMES):
+            await user.send("There already exists a bot command with the same name.")
+            return
+        try:
+            await self.commandobj.create_modified(
+                command, text, message, guild, user, made_by_admin
+            )
+        except AlreadyExists:
+            await user.send(
+                "This command already exists. Use `customcom edit` command to edit it."
+            )
+        except ArgParseError as e:
+            await user.send(e.args[0])
+
+
+class CommandObjMod(CommandObj):
+    def __init__(self, config, bot, database):
+        super().__init__(config=config, bot=bot)
+        self.activeDb = database
+
+    async def create_modified(
+        self, command, response, message, guild, user, made_by_admin
+    ):
+        """Create a custom command"""
+        # Check if this command is already registered as a customcommand
+        if await self.db(guild).commands.get_raw(command, default=None):
+            raise AlreadyExists()
+        # test to raise
+        CustomCommands.prepare_args(
+            response if isinstance(response, str) else response[0]
+        )
+        author = user
+        ccinfo = {
+            "author": {"id": author.id, "name": str(author)},
+            "command": command,
+            "cooldowns": {},
+            "created_at": self.get_now(),
+            "editors": [],
+            "response": response,
+        }
+        await self.db(guild).commands.set_raw(command, value=ccinfo)
+        # marks command as created by non-admin; counted as normal
+        self.activeDb.save_to_db(command, user.id, made_by_admin, guild.id)
+        MESSAGE_TEMPLATE = (
+            """command successfully created!: You can now use: >{command}"""
+        )
+
+        can_use_alert = MESSAGE_TEMPLATE.format(command=command)
+        await author.send(can_use_alert)
