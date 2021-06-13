@@ -27,10 +27,10 @@ class Config:
             self.loaded_cmd_data["command_moderation"] = True
 
             # the name of the channel used for moderation
-            self.loaded_cmd_data["mod_channel_name"] = "usercommandmgmt-admin-approval"
+            self.loaded_cmd_data["mod_channels"] = {"0000000000000": 696969696969696969}
 
             # the number of approvals and rejects needed to accept/reject a command request
-            self.loaded_cmd_data["number_of_mod_reacts_needed"] = 2
+            self.loaded_cmd_data["number_of_mod_reacts_needed"] = {"0000000000000": 2}
 
     def save_state_to_file(self):
         """
@@ -46,18 +46,20 @@ class Config:
         self.loaded_cmd_data.update({"command_moderation": new_state})
         self.save_state_to_file()
 
-    def set_mod_channel_name(self, new_name):
+    def set_mod_channel_name(self, guild_id, channel_id):
         """
         sets the mod channel name to the new name and updates the config file
         """
-        self.loaded_cmd_data.update({"mod_channel_name": new_name})
+        self.loaded_cmd_data.get("mod_channels")[0].update({str(guild_id): channel_id})
         self.save_state_to_file()
 
-    def set_reacts_needed(self, new_amt):
+    def set_reacts_needed(self, guild_id, new_amt):
         """
         sets the number of needed reacts for approval/rejection to new_amt and updates the config file
         """
-        self.loaded_cmd_data.update({"number_of_mod_reacts_needed": new_amt})
+        self.loaded_cmd_data.get("number_of_mod_reacts_needed")[0].update(
+            {str(guild_id): new_amt}
+        )
         self.save_state_to_file()
 
     def add_role_allowance(self, role_name, allowance):
@@ -78,7 +80,9 @@ class Config:
         """
         gives the given role_name a new allowance in the configuration
         """
-        self.loaded_cmd_data.get("role_cmd_limits").update({role_name: new_allowance})
+        self.loaded_cmd_data.get("role_cmd_limits")[0].update(
+            {role_name: new_allowance}
+        )
         self.save_state_to_file()
 
     def get_role_list(self):
@@ -93,14 +97,16 @@ class Config:
         """
         return self.loaded_cmd_data.get("command_moderation")
 
-    def get_mod_channel_name(self):
+    def get_mod_channel_name(self, guild_id):
         """
         returns the name of the set command moderation channel
         """
-        return self.loaded_cmd_data.get("mod_channel_name")
+        return self.loaded_cmd_data.get("mod_channels")[0].get(str(guild_id))
 
-    def get_reacts_needed(self):
+    def get_reacts_needed(self, guild_id):
         """
         returns the amount of reacts needed to approve/reject a command request
         """
-        return self.loaded_cmd_data.get("number_of_mod_reacts_needed")
+        return self.loaded_cmd_data.get("number_of_mod_reacts_needed")[0].get(
+            str(guild_id)
+        )

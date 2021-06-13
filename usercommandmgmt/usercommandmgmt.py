@@ -70,8 +70,8 @@ class Usercommandmgmt(CustomCommands):
                         {"Tier 1 Simp": 1, "Tier 2 Simp": 3, "Tier 3 Simp": 5}
                     ],
                     "command_moderation": True,
-                    "mod_channel_name": "usercommandmgmt-admin-approval",
-                    "number_of_mod_reacts_needed": 2,
+                    "mod_channels": [{"0000000000000": 696969696969696969}],
+                    "number_of_mod_reacts_needed": [{"0000000000000": 2}],
                 }
                 json.dump(default, f, indent=2)
 
@@ -114,6 +114,21 @@ class Usercommandmgmt(CustomCommands):
         CCs can be enhanced with arguments, see the guide
         [here](https://docs.discord.red/en/stable/cog_customcom.html).
         """
+
+        if (
+            self.bot.get_channel(self.mod_config.get_mod_channel_name(ctx.guild.id))
+            == None
+        ):
+            await ctx.send(
+                "Assign a mod channel for this server first! Use command setmodchannel"
+            )
+            return
+
+        if self.mod_config.get_reacts_needed(ctx.guild.id) == None:
+            await ctx.send(
+                "Assign needed reacts for approval for this server first! Use command setapprovalreq"
+            )
+            return
 
         # overrides the mod process and limit check if user is an admin
         if ctx.message.author.top_role.permissions.administrator:
@@ -262,8 +277,8 @@ class Usercommandmgmt(CustomCommands):
         )
 
         # finds the channel to send this message to: the moderator one; specified in configurable.py
-        mod_channel = self.find_channel_by_name(
-            self.mod_config.get_mod_channel_name(), ctx.message.guild.channels
+        mod_channel = self.bot.get_channel(
+            self.mod_config.get_mod_channel_name(ctx.guild.id)
         )
         # submit proposed command and relavant info to specified moderation channel
         msg = await mod_channel.send(message_to_submit)
@@ -287,13 +302,14 @@ class Usercommandmgmt(CustomCommands):
         """
         channel = self.bot.get_channel(payload.channel_id)
 
-        if self.mod_config.get_mod_channel_name() == channel.name:
+        if self.mod_config.get_mod_channel_name(payload.guild_id) == channel.id:
             if payload.emoji.name == "✅" or payload.emoji.name == "❌":
                 message = await channel.fetch_message(payload.message_id)
                 reaction = get(message.reactions, emoji=payload.emoji.name)
                 if (
                     reaction
-                    and reaction.count >= 1 + self.mod_config.get_reacts_needed()
+                    and reaction.count
+                    >= 1 + self.mod_config.get_reacts_needed(payload.guild_id)
                 ):
                     req_data = self.create_command_queue.get(message.id)
                     # find the command data in queue, if none then do nothing
@@ -361,9 +377,15 @@ class Usercommandmgmt(CustomCommands):
         sets the name of the mod channel to to channel_name in the configuration
         """
         if self.find_channel_by_name(channel_name, ctx.message.guild.channels):
-            self.mod_config.set_mod_channel_name(channel_name)
+            self.mod_config.set_mod_channel_name(
+                ctx.guild.id,
+                self.find_channel_by_name(channel_name, ctx.message.guild.channels).id,
+            )
             await ctx.send(
-                "mod channel set to #" + self.mod_config.get_mod_channel_name()
+                "mod channel set to #"
+                + self.bot.get_channel(
+                    self.mod_config.get_mod_channel_name(ctx.guild.id)
+                ).name
             )
         else:
             await ctx.send("Could not find a channel with that name")
@@ -377,10 +399,10 @@ class Usercommandmgmt(CustomCommands):
         if new_req < 1:
             await ctx.send("You must provide a number >=1")
         else:
-            self.mod_config.set_reacts_needed(new_req)
+            self.mod_config.set_reacts_needed(ctx.guild.id, new_req)
             await ctx.send(
                 "Reaction requirement set to "
-                + str(self.mod_config.get_reacts_needed())
+                + str(self.mod_config.get_reacts_needed(ctx.guild.id))
             )
 
     @checks.mod_or_permissions(administrator=True)
@@ -420,7 +442,7 @@ class Usercommandmgmt(CustomCommands):
         """
         changes role allowance to the given number for the given role. Must be greater or equal to 1
         """
-        if self.mod_config.get_role_list.get(role) == None:
+        if self.mod_config.get_role_list().get(role) == None:
             await ctx.send("Could not find the command you specified")
         else:
             self.mod_config.change_role_allowance(role, new_allowance)
