@@ -343,7 +343,7 @@ class Usercommandmgmt(CustomCommands):
                         self.create_command_queue.pop(message.id)
 
     # utility commands for users
-    @commands.command()
+    @commands.command(name="allowance")
     async def command_count(self, ctx):
         """
         gets the number of commands created by the caller of this command
@@ -361,7 +361,7 @@ class Usercommandmgmt(CustomCommands):
 
     # utility commands for moderators
     @checks.mod_or_permissions(administrator=True)
-    @commands.command()
+    @commands.command(name="togglemod")
     async def togglemoderation(self, ctx):
         """
         sets command_moderation to false if true, and vice versa
@@ -371,7 +371,7 @@ class Usercommandmgmt(CustomCommands):
         await ctx.send("moderation set to " + str(self.mod_config.is_mod_enabled()))
 
     @checks.mod_or_permissions(administrator=True)
-    @commands.command()
+    @commands.command(name="setmodch")
     async def setmodchannel(self, ctx, channel_name: str):
         """
         sets the name of the mod channel to to channel_name in the configuration
@@ -391,7 +391,7 @@ class Usercommandmgmt(CustomCommands):
             await ctx.send("Could not find a channel with that name")
 
     @checks.mod_or_permissions(administrator=True)
-    @commands.command()
+    @commands.command(name="setapprovereq")
     async def setapprovalreq(self, ctx, new_req: int):
         """
         sets the number of needed reacts for approval/rejection of proposed functions in the configuration. Number must be >= 1, otherwise does nothing and alerts user
@@ -406,7 +406,7 @@ class Usercommandmgmt(CustomCommands):
             )
 
     @checks.mod_or_permissions(administrator=True)
-    @commands.command()
+    @commands.command(name="addroleallowance")
     async def addallowancedrole(self, ctx, new_role: str, allowance: int):
         """
         adds a new allowance setting for a role in the dictionary with the given allowance, if it doesn't already exist. Allowance must be >= 1
@@ -423,7 +423,7 @@ class Usercommandmgmt(CustomCommands):
             await ctx.send("that role already has an allowance set")
 
     @checks.mod_or_permissions(administrator=True)
-    @commands.command()
+    @commands.command(name="rmroleallowance")
     async def removeallowancedrole(self, ctx, role_to_delete: str):
         """
         removes an allowance setting for a role in the dictionary, if it exists
@@ -437,7 +437,7 @@ class Usercommandmgmt(CustomCommands):
             )
 
     @checks.mod_or_permissions(administrator=True)
-    @commands.command()
+    @commands.command(name="editroleallowance")
     async def changeroleallowance(self, ctx, role: str, new_allowance: int):
         """
         changes role allowance to the given number for the given role. Must be greater or equal to 1
