@@ -120,13 +120,13 @@ class Usercommandmgmt(CustomCommands):
             == None
         ):
             await ctx.send(
-                "Assign a mod channel for this server first! Use command setmodchannel"
+                "Assign a mod channel for this server first! Use command setmodch"
             )
             return
 
         if self.mod_config.get_reacts_needed(ctx.guild.id) == None:
             await ctx.send(
-                "Assign needed reacts for approval for this server first! Use command setapprovalreq"
+                "Assign needed reacts for approval for this server first! Use command setapprovereq"
             )
             return
 
@@ -432,9 +432,7 @@ class Usercommandmgmt(CustomCommands):
             await ctx.send("That role has no defined allowance")
         else:
             self.mod_config.del_role_allowance(role_to_delete)
-            await ctx.send(
-                "Allowance settings for " + role_to_delete + " role cleareds"
-            )
+            await ctx.send("Allowance settings for " + role_to_delete + " role cleared")
 
     @checks.mod_or_permissions(administrator=True)
     @commands.command(name="editroleallowance")

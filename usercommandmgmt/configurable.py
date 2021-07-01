@@ -66,14 +66,14 @@ class Config:
         """
         adds a new role and its associated allowance to the configuration
         """
-        self.loaded_cmd_data[role_name] = allowance
+        self.loaded_cmd_data.get("role_cmd_limits")[0].update({role_name: allowance})
         self.save_state_to_file()
 
     def del_role_allowance(self, role_name):
         """
         removes a role and its allowance from the configuration
         """
-        self.loaded_cmd_data.pop(role_name)
+        self.loaded_cmd_data.get("role_cmd_limits")[0].update({role_name: 0})
         self.save_state_to_file()
 
     def change_role_allowance(self, role_name, new_allowance):
