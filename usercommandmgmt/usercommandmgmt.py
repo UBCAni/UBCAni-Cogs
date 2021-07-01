@@ -411,7 +411,7 @@ class Usercommandmgmt(CustomCommands):
         """
         adds a new allowance setting for a role in the dictionary with the given allowance, if it doesn't already exist. Allowance must be >= 1
         """
-        if self.mod_config.get_role_list.get(new_role) == None:
+        if self.mod_config.get_role_list().get(new_role) == None:
             if allowance < 1:
                 await ctx.send("you must provide a number >= 1")
             else:
@@ -428,7 +428,7 @@ class Usercommandmgmt(CustomCommands):
         """
         removes an allowance setting for a role in the dictionary, if it exists
         """
-        if self.mod_config.get_role_list.get(role_to_delete) == None:
+        if self.mod_config.get_role_list().get(role_to_delete) == None:
             await ctx.send("That role has no defined allowance")
         else:
             self.mod_config.del_role_allowance(role_to_delete)
