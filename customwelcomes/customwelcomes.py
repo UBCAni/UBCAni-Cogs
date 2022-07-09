@@ -29,17 +29,43 @@ class CustomWelcomes(commands.Cog):
     async def setwelcomech(self, ctx):
         """Call this in the channel where you want to display welcomes"""
         # Your code will go here
-        await config.guild(ctx.guild).welcome_msg_channel.set(ctx.channel.id)
+        await self.config.guild(ctx.author.guild).welcome_msg_channel.set(ctx.channel.id)
+        await ctx.send("New welcome channel is: " + ctx.channel.name)
+
+    @commands.command()
+    async def getwelcomestatus(self, ctx):
+        """Call this in the channel where you want to display welcomes"""
+        # Your code will go here
+        channel = discord.utils.get(ctx.author.guild.channels, id= await self.config.guild(ctx.author.guild).get_attr("welcome_msg_channel")())
+        await ctx.send("Current welcome channel is: " + channel.name)
+        await ctx.send("Sending custom message: " + str(await self.config.guild(ctx.author.guild).get_attr("toggle_msg")()))
+        await ctx.send("Sending custom image: "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
 
     @commands.command()
     async def togglewelmsg(self, ctx):
         """Call this to toggle welcome message on and off"""
-        pass
+        value = await self.config.guild(ctx.author.guild).get_attr("toggle_msg")()
+
+        #invert valuue
+        value = not value
+
+        #change value
+        await self.config.guild(ctx.author.guild).toggle_msg.set(value)
+
+        await ctx.send("Sending custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("toggle_msg")()))
 
     @commands.command()
     async def togglewelimg(self, ctx):
         """Call this to toggle welcome image on and off"""
-        pass
+        value = await self.config.guild(ctx.author.guild).get_attr("toggle_img")()
+
+        #invert valuue
+        value = not value
+
+        #change value
+        await self.config.guild(ctx.author.guild).toggle_img.set(value)
+
+        await ctx.send("Sending custom image set to "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
 
 #   @commands.command()
 #   async def mycom(self, ctx):
