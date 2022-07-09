@@ -22,6 +22,15 @@ class CustomWelcomes(commands.Cog):
     async def on_member_join(self, member):
         guild = member.guild
         channel = discord.utils.get(guild.channels, id= await self.config.guild(guild).get_attr("welcome_msg_channel")())
+
+        #if true, process welcome message and send
+        if await self.config.guild(guild).get_attr("toggle_msg")():
+            pass
+
+        #if true, process welcome img and send
+        if await self.config.guild(guild).get_attr("toggle_img")():
+            pass
+
         await channel.send("test message")
 
     ### UTLITY COMMANDS ###
