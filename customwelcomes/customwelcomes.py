@@ -33,8 +33,8 @@ class CustomWelcomes(commands.Cog):
 
         await channel.send("test message")
 
-    ### UTLITY COMMANDS ###
-    @commands.group(aliases=["gsettings"])
+    ### TOGGLE & UTLITY COMMANDS ###
+    @commands.group(aliases=["welcomecfg"])
     async def greetsettings(self, ctx: commands.Context):
         """Base command for configuring the customised welcome."""
         pass
@@ -81,15 +81,23 @@ class CustomWelcomes(commands.Cog):
 
         await ctx.send("Sending custom image set to "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
 
-    ### UTLITY COMMANDS ###
+    ### SET MESSAGE & PICTURE COMMANDS ###
+    @commands.group(aliases=["welcomesetset"])
+    async def greetcontent(self, ctx: commands.Context):
+        """Base command for configuring the image/text used for customised welcome."""
+        pass
 
+    @greetcontent.group(name="settxt")
+    async def set_text(self, ctx):
+        pass
 
+    @greetcontent.group(name="setimg")
+    async def set_text(self, ctx):
+        pass
 
     ### CUSTOM WELCOME PICTURE GENERATION ###
     def get_welcome_img(self):
         pass
-
-
 
     ### CUSTOM WELCOME MESSAGE GENERATION ###
     def get_welcome_msg(self):
