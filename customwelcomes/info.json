@@ -1,0 +1,11 @@
+﻿{
+  "name": "customwelcomes",
+  "author": ["くずま#0420"],
+  "short": "Custom welcome messages and procedurally generated images",
+  "description": "This cog enables fully configurable custom welcome messages and welcome images",
+  "install_msg": "Thanks for installing custom welcomes.",
+  "requirements": [ "Pillow" ],
+  "tags": [ "utility" ],
+  "permissions": [],
+  "end_user_data_statement": "This cog stores a user's avatar to generate the custom welcome image."
+}

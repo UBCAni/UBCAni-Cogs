@@ -2,7 +2,7 @@ from redbot.core import commands, Config, data_manager
 from redbot.core.bot import Red
 import discord
 import os
-
+from PIL import Image, ImageChops, ImageOps
 
 class CustomWelcomes(commands.Cog):
     """My custom cog"""
@@ -19,9 +19,12 @@ class CustomWelcomes(commands.Cog):
 
         self.config.register_guild(**default_guild)
         self.data_dir = data_manager.cog_data_path(cog_instance=self)
-
-
-
+        self.img_dir = os.path.join(self.data_dir, "welcome_imgs")
+        # create folder to temporarily hold customised images
+        try:
+            os.mkdir(os.path.join(self.data_dir, "welcome_imgs"))
+        except OSError as error: 
+            pass
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -120,8 +123,19 @@ class CustomWelcomes(commands.Cog):
         await ctx.respond("Here is the template file!", file=Discord.File("UBCANI_welcome_template.png"))
 
     ### CUSTOM WELCOME PICTURE GENERATION ###
-    def generate_welcome_img(self):
-        pass
+    def generate_welcome_img(self, user, avatar):
+        """creates an image for the specific player using their avatar and saves it to the custom image folder, then returns the path to that image"""
+        base = Image.open(os.path.join(self.data_dir, "default.png"))
+
+        usr = "{}.png"
+        gen_image_path = os.path.join(self.img_dir, usr.format(user.id))
+        avatar.save(gen_image_path)
+        retrieved_avatar = Image.open(gen_image_path)
+
+        base.paste(retrieved_avatar, (0,0))
+        base.save(gen_image_path)
+
+        return gen_image_path
 
     ### CUSTOM WELCOME MESSAGE GENERATION ###
     def get_welcome_msg(self):
