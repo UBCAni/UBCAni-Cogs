@@ -88,12 +88,21 @@ class CustomWelcomes(commands.Cog):
         pass
 
     @greetcontent.group(name="settxt")
-    async def set_text(self, ctx):
-        pass
+    async def set_text(self, ctx, txt):
+        """Sets the message to be sent when a user joins the server. This must be set before any welcome message is sent"""
+        await self.config.guild(ctx.author.guild).def_welcome_msg.set(txt)
+        new_welcome_message = "New welcome message is : {}"
+        await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
 
     @greetcontent.group(name="setimg")
     async def set_text(self, ctx):
-        pass
+        """Sets the image to be sent when a user joins the server. This must be set before any welcome image is sent. Please only attach 1 image, make it fit into the template provided"""
+
+    @greetcontent.group(name="template")
+    async def get_tempate(self, ctx):
+        """responds to command with the template for the welcome image so users can create their own easier"""
+        await ctx.respond("Here is the template file!", file=Discord.File("UBCANI_welcome_template.png"))
+
 
     ### CUSTOM WELCOME PICTURE GENERATION ###
     def get_welcome_img(self):
