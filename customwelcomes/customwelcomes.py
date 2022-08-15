@@ -14,7 +14,8 @@ class CustomWelcomes(commands.Cog):
         default_guild = {
             "welcome_msg_channel": 802078699582521374,
             "toggle_msg": True,
-            "toggle_img": False
+            "toggle_img": False,
+            "def_welcome_msg": "Welcome to UBC chinese cartoon club {USER}"
         }
 
         self.config.register_guild(**default_guild)
@@ -31,15 +32,39 @@ class CustomWelcomes(commands.Cog):
         guild = member.guild
         channel = discord.utils.get(guild.channels, id= await self.config.guild(guild).get_attr("welcome_msg_channel")())
 
+        is_sending_msg = await self.config.guild(guild).get_attr("toggle_msg")()
+        is_sending_img = await self.config.guild(guild).get_attr("toggle_img")()
+
         #if true, process welcome message and send
-        if await self.config.guild(guild).get_attr("toggle_msg")():
-            pass
-
+        welcome_msg = ""
+        if is_sending_msg:
+            welcome_msg = self.get_welcome_msg()
+            welcome_msg.replace("{USER}", member.mention)
+            
         #if true, process welcome img and send
-        if await self.config.guild(guild).get_attr("toggle_img")():
+        if is_sending_img:
             pass
 
-        await channel.send("test message")
+
+
+        #provides appropriate response according to settings
+        if is_sending_msg and is_sending_img:
+            img_format = "{}.png"
+            welcome_img_path = os.path.join(self.img_dir, img_format)
+            channel.send(welcome_msg, file=Discord.File(welcome_img_path.format(member.id)))
+
+        elif not is_sending_msg and is_sending_img:
+            img_format = "{}.png"
+            welcome_img_path = os.path.join(self.img_dir, img_format)
+            channel.send(file=Discord.File(welcome_img_path.format(member.id)))
+
+        elif is_sending_msg and not is_sending_img:
+            channel.send(welcome_msg)
+
+        elif not is_sending_msg and not is_sending_img:
+            # do nothing
+            pass
+        
 
     ### TOGGLE & UTLITY COMMANDS ###
     @commands.group(aliases=["welcomecfg"])
@@ -139,7 +164,7 @@ class CustomWelcomes(commands.Cog):
 
     ### CUSTOM WELCOME MESSAGE GENERATION ###
     def get_welcome_msg(self):
-        pass
+        return ctx.author.guild).get_attr("def_welcome_msg")()
     
 
 
