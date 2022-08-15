@@ -1,6 +1,8 @@
-from redbot.core import commands, Config
+from redbot.core import commands, Config, data_manager
 from redbot.core.bot import Red
 import discord
+import os
+
 
 class CustomWelcomes(commands.Cog):
     """My custom cog"""
@@ -16,6 +18,9 @@ class CustomWelcomes(commands.Cog):
         }
 
         self.config.register_guild(**default_guild)
+        self.data_dir = data_manager.cog_data_path(cog_instance=self)
+
+
 
 
     @commands.Cog.listener()
@@ -95,17 +100,27 @@ class CustomWelcomes(commands.Cog):
         await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
 
     @greetcontent.group(name="setimg")
-    async def set_text(self, ctx):
+    async def set_image(self, ctx):
         """Sets the image to be sent when a user joins the server. This must be set before any welcome image is sent. Please only attach 1 image, make it fit into the template provided"""
+        image = None
+        if len(ctx.message.attachments) == 1:
+            image = ctx.message.attachments[0]
+        else:
+            await ctx.respond("You need to attach exactly 1 image in the message that uses this command")
+            return
+
+        base_img_path = os.path.join(self.data_dir, "default.png")
+        image.save(base_img_path)
+
+        await ctx.respond("Welcome Image base set to: ", file=Discord.File(base_img_path))
 
     @greetcontent.group(name="template")
     async def get_tempate(self, ctx):
         """responds to command with the template for the welcome image so users can create their own easier"""
         await ctx.respond("Here is the template file!", file=Discord.File("UBCANI_welcome_template.png"))
 
-
     ### CUSTOM WELCOME PICTURE GENERATION ###
-    def get_welcome_img(self):
+    def generate_welcome_img(self):
         pass
 
     ### CUSTOM WELCOME MESSAGE GENERATION ###
