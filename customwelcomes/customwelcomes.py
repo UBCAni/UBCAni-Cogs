@@ -162,11 +162,15 @@ class CustomWelcomes(commands.Cog):
 
         return gen_image_path
 
+    def generate_random_welcome_img(self, user, avatar):
+        pass
+
     ### CUSTOM WELCOME MESSAGE GENERATION ###
     def get_welcome_msg(self):
         return ctx.author.guild).get_attr("def_welcome_msg")()
     
-
+    def get_random_welcome_msg(self):
+        pass
 
 
 #   @commands.command()
