@@ -15,7 +15,8 @@ class CustomWelcomes(commands.Cog):
             "welcome_msg_channel": 802078699582521374,
             "toggle_msg": True,
             "toggle_img": False,
-            "def_welcome_msg": "Welcome to UBC chinese cartoon club {USER}"
+            "def_welcome_msg": "Welcome to UBC chinese cartoon club {USER}", 
+            "mandatory_msg_frag": "Make sure to check <#244434657414873090> and <#892612995891466270>! Feel free to DM an exec if you have any questions!"
         }
 
         self.config.register_guild(**default_guild)
@@ -38,9 +39,10 @@ class CustomWelcomes(commands.Cog):
         #if true, process welcome message and send
         welcome_msg = ""
         if is_sending_msg:
-            welcome_msg = self.get_welcome_msg()
-            welcome_msg.replace("{USER}", member.mention)
-            
+            welcome_msg = str(await self.get_welcome_msg(member))
+            mandatory  =await self.config.guild(guild).get_attr("mandatory_msg_frag")()
+            welcome_msg = welcome_msg.replace("{USER}", member.mention) + ". " + str(mandatory)
+
         #if true, process welcome img and send
         if is_sending_img:
             pass
@@ -51,15 +53,15 @@ class CustomWelcomes(commands.Cog):
         if is_sending_msg and is_sending_img:
             img_format = "{}.png"
             welcome_img_path = os.path.join(self.img_dir, img_format)
-            channel.send(welcome_msg, file=Discord.File(welcome_img_path.format(member.id)))
+            await channel.send(welcome_msg, file=Discord.File(welcome_img_path.format(member.id)))
 
         elif not is_sending_msg and is_sending_img:
             img_format = "{}.png"
             welcome_img_path = os.path.join(self.img_dir, img_format)
-            channel.send(file=Discord.File(welcome_img_path.format(member.id)))
+            await channel.send(file=Discord.File(welcome_img_path.format(member.id)))
 
         elif is_sending_msg and not is_sending_img:
-            channel.send(welcome_msg)
+            await channel.send(welcome_msg)
 
         elif not is_sending_msg and not is_sending_img:
             # do nothing
@@ -114,6 +116,12 @@ class CustomWelcomes(commands.Cog):
 
         await ctx.send("Sending custom image set to "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
 
+    @greetsettings.group(name="currrentgreet")
+    async def get_current_greeting(self, ctx):
+        await ctx.send()
+        base_img_path = os.path.join(self.data_dir, "default.png")  
+        await ctx.send("Current template image is: ", file=Discord.File(base_img_path))
+
     ### SET MESSAGE & PICTURE COMMANDS ###
     @commands.group(aliases=["welcomesetset"])
     async def greetcontent(self, ctx: commands.Context):
@@ -166,9 +174,10 @@ class CustomWelcomes(commands.Cog):
         pass
 
     ### CUSTOM WELCOME MESSAGE GENERATION ###
-    def get_welcome_msg(self):
-        return ctx.author.guild).get_attr("def_welcome_msg")()
-    
+    async def get_welcome_msg(self, author):
+        msg =  await self.config.guild(author.guild).get_attr("def_welcome_msg")()
+        return msg
+
     def get_random_welcome_msg(self):
         pass
 
