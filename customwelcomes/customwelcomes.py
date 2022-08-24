@@ -18,6 +18,8 @@ class CustomWelcomes(commands.Cog):
             "welcome_msg_channel": 802078699582521374,
             "toggle_msg": True,
             "toggle_img": False,
+            "randomise_msg": False,
+            "randomise_img": False,
             "def_welcome_msg": "Welcome to UBC chinese cartoon club {USER}", 
             "mandatory_msg_frag": "Make sure to check <#244434657414873090> and <#892612995891466270>! Feel free to DM an exec if you have any questions!"
         }
@@ -124,6 +126,32 @@ class CustomWelcomes(commands.Cog):
         await self.config.guild(ctx.author.guild).toggle_img.set(value)
 
         await ctx.send("Sending custom image set to "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
+
+    @greetsettings.group(name="togglerandommsg")
+    async def togglewelmsg(self, ctx):
+        """Call this to toggle random welcome message on and off"""
+        value = await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()
+
+        #invert valuue
+        value = not value
+
+        #change value
+        await self.config.guild(ctx.author.guild).toggle_msg.set(value)
+
+        await ctx.send("Sending custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()))
+
+    @greetsettings.group(name="togglerandomimg")
+    async def togglewelmsg(self, ctx):
+        """Call this to toggle random welcome message on and off"""
+        value = await self.config.guild(ctx.author.guild).get_attr("randomise_img")()
+
+        #invert valuue
+        value = not value
+
+        #change value
+        await self.config.guild(ctx.author.guild).toggle_msg.set(value)
+
+        await ctx.send("Sending custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_img")()))
 
     @greetsettings.group(name="currrentgreet")
     async def get_current_greeting(self, ctx):
