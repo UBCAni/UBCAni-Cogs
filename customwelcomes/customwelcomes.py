@@ -46,16 +46,27 @@ class CustomWelcomes(commands.Cog):
         is_sending_msg = await self.config.guild(guild).get_attr("toggle_msg")()
         is_sending_img = await self.config.guild(guild).get_attr("toggle_img")()
 
+        is_randomising_msg = await self.config.guild(guild).get_attr("randomise_msg")()
+        is_randomising_img = await self.config.guild(guild).get_attr("randomise_img")()
+
         #if true, process welcome message and send
         welcome_msg = ""
         if is_sending_msg:
-            welcome_msg = str(await self.get_welcome_msg(member))
+            if is_randomising_msg:
+                welcome_msg = str(await self.get_random_welcome_msg(member))
+            else:
+                welcome_msg = str(await self.get_welcome_msg(member))
+
             mandatory  =await self.config.guild(guild).get_attr("mandatory_msg_frag")()
             welcome_msg = welcome_msg.replace("{USER}", member.mention) + ". " + str(mandatory)
 
+
         #if true, process welcome img and send
         if is_sending_img:
-            custom_img = await self.generate_welcome_img(member)
+            if is_randomising_img:
+                custom_img = await self.generate_random_welcome_img(member)
+            else:
+                custom_img = await self.generate_welcome_img(member)
 
 
 
@@ -230,7 +241,7 @@ class CustomWelcomes(commands.Cog):
         #base.paste(retrieved_avatar, (0,0))
         #base.save(gen_image_path)
 
-    def generate_random_welcome_img(self, user, avatar):
+    def generate_random_welcome_img(self, user):
         pass
 
     ### CUSTOM WELCOME MESSAGE GENERATION ###
@@ -238,7 +249,7 @@ class CustomWelcomes(commands.Cog):
         msg =  await self.config.guild(author.guild).get_attr("def_welcome_msg")()
         return msg
 
-    def get_random_welcome_msg(self):
+    def get_random_welcome_msg(self, author):
         pass
 
 
