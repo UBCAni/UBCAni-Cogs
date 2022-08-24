@@ -20,8 +20,9 @@ class CustomWelcomes(commands.Cog):
             "toggle_img": False,
             "randomise_msg": False,
             "randomise_img": False,
-            "def_welcome_msg": "Welcome to UBC chinese cartoon club {USER}", 
-            "mandatory_msg_frag": "Make sure to check <#244434657414873090> and <#892612995891466270>! Feel free to DM an exec if you have any questions!"
+            "def_welcome_msg": "Welcome, {USER}", 
+            "mandatory_msg_frag": "default mandatory message snippet",
+            "message_pool" : []
         }
 
         self.config.register_guild(**default_guild)
@@ -34,7 +35,7 @@ class CustomWelcomes(commands.Cog):
 
         # create folder to hold welcome images
         try:
-            os.mkdir(os.path.join(self.data_dir, "welcome_imgs"))
+            os.mkdir(os.path.join(self.img_dir)
         except OSError as error: 
             pass
 
@@ -139,30 +140,40 @@ class CustomWelcomes(commands.Cog):
         await ctx.send("Sending custom image set to "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
 
     @greetsettings.group(name="togglerandommsg")
-    async def togglewelmsg(self, ctx):
+    async def toggle_msg_randomiser(self, ctx):
         """Call this to toggle random welcome message on and off"""
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()
 
         #invert valuue
         value = not value
 
+        #if setting to true and there arent any messages in the pool, prevent toggling to true
+        if value and len(await self.config.guild(ctx.author.guild).get_attr("message_pool")()) < 1:
+            await ctx.send("There are currently no saved messages. Add at least one before turning the randomiser on")
+            return
+
         #change value
         await self.config.guild(ctx.author.guild).toggle_msg.set(value)
 
-        await ctx.send("Sending custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()))
+        await ctx.send("randomising custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()))
 
     @greetsettings.group(name="togglerandomimg")
-    async def togglewelmsg(self, ctx):
+    async def toggle_img_randomiser(self, ctx):
         """Call this to toggle random welcome message on and off"""
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_img")()
 
         #invert valuue
         value = not value
 
+        #if setting to true and there arent any images in the folder, prevent toggling to true
+        if value and len(os.listdir(self.img_dir)) < 1:
+            await ctx.send("There are currently no images in the image_base folder. Add at least one before turning the randomiser on")
+            return
+
         #change value
         await self.config.guild(ctx.author.guild).toggle_msg.set(value)
 
-        await ctx.send("Sending custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_img")()))
+        await ctx.send("randomising custom image set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_img")()))
 
     @greetsettings.group(name="currrentgreet")
     async def get_current_greeting(self, ctx):
@@ -203,6 +214,20 @@ class CustomWelcomes(commands.Cog):
     async def get_tempate(self, ctx):
         """responds to command with the template for the welcome image so users can create their own easier"""
         await ctx.reply("Here is the template file!", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
+
+    @greetcontent.group(name="addimg")
+    async def add_img(self, ctx):
+        """adds another image to the random image pool"""
+        pass
+
+    @greetcontent.group(name="addmsg")
+    async def add_msh(self, ctx):
+        """adds another message to the random message pool"""
+        pass
+
+
+
+
 
     ### CUSTOM WELCOME PICTURE GENERATION ###
     async def generate_welcome_img(self, user):
