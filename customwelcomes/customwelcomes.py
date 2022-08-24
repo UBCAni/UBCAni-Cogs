@@ -221,7 +221,7 @@ class CustomWelcomes(commands.Cog):
         pass
 
     @greetcontent.group(name="addmsg")
-    async def add_msh(self, ctx):
+    async def add_msg(self, ctx):
         """adds another message to the random message pool"""
         pass
 
