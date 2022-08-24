@@ -2,6 +2,9 @@ from redbot.core import commands, Config, data_manager
 from redbot.core.bot import Red
 import discord
 import os
+import sys
+import aiohttp
+import io
 from PIL import Image, ImageChops, ImageOps
 
 class CustomWelcomes(commands.Cog):
@@ -22,7 +25,12 @@ class CustomWelcomes(commands.Cog):
         self.config.register_guild(**default_guild)
         self.data_dir = data_manager.cog_data_path(cog_instance=self)
         self.img_dir = os.path.join(self.data_dir, "welcome_imgs")
-        # create folder to temporarily hold customised images
+
+        self.session = aiohttp.ClientSession()
+        # a header to successfully download user avatars for use
+        self.headers = {"User-agent": "Mozilla/5.0"}
+
+        # create folder to hold welcome images
         try:
             os.mkdir(os.path.join(self.data_dir, "welcome_imgs"))
         except OSError as error: 
@@ -45,7 +53,7 @@ class CustomWelcomes(commands.Cog):
 
         #if true, process welcome img and send
         if is_sending_img:
-            pass
+            custom_img = await self.generate_welcome_img(member)
 
 
 
@@ -53,15 +61,15 @@ class CustomWelcomes(commands.Cog):
         if is_sending_msg and is_sending_img:
             img_format = "{}.png"
             welcome_img_path = os.path.join(self.img_dir, img_format)
-            await channel.send(welcome_msg, file=Discord.File(welcome_img_path.format(member.id)))
+            await channel.send(welcome_msg, file=discord.File(custom_img, filename = "output.png"))
 
         elif not is_sending_msg and is_sending_img:
             img_format = "{}.png"
             welcome_img_path = os.path.join(self.img_dir, img_format)
-            await channel.send(file=Discord.File(welcome_img_path.format(member.id)))
+            await channel.send(file=discord.File(custom_img, filename = "output.png"))
 
         elif is_sending_msg and not is_sending_img:
-            await channel.send(welcome_msg)
+            await channel.send(welcome_msg, filename = "output.png")
 
         elif not is_sending_msg and not is_sending_img:
             # do nothing
@@ -70,6 +78,7 @@ class CustomWelcomes(commands.Cog):
 
     ### TOGGLE & UTLITY COMMANDS ###
     @commands.group(aliases=["welcomecfg"])
+    @commands.guild_only()
     async def greetsettings(self, ctx: commands.Context):
         """Base command for configuring the customised welcome."""
         pass
@@ -118,12 +127,13 @@ class CustomWelcomes(commands.Cog):
 
     @greetsettings.group(name="currrentgreet")
     async def get_current_greeting(self, ctx):
-        await ctx.send()
+        await ctx.send("Current Message is: "+ str(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
+        await ctx.send("Mandatory Message Fragment: " + str(await self.config.guild(ctx.author.guild).get_attr("mandatory_msg_frag")()))
         base_img_path = os.path.join(self.data_dir, "default.png")  
-        await ctx.send("Current template image is: ", file=Discord.File(base_img_path))
+        await ctx.send("Current template image is: ", file=discord.File(base_img_path))
 
     ### SET MESSAGE & PICTURE COMMANDS ###
-    @commands.group(aliases=["welcomesetset"])
+    @commands.group(aliases=["welcomeset"])
     async def greetcontent(self, ctx: commands.Context):
         """Base command for configuring the image/text used for customised welcome."""
         pass
@@ -142,33 +152,55 @@ class CustomWelcomes(commands.Cog):
         if len(ctx.message.attachments) == 1:
             image = ctx.message.attachments[0]
         else:
-            await ctx.respond("You need to attach exactly 1 image in the message that uses this command")
+            await ctx.reply("You need to attach exactly 1 image in the message that uses this command")
             return
 
         base_img_path = os.path.join(self.data_dir, "default.png")
-        image.save(base_img_path)
+        await image.save(base_img_path)
 
-        await ctx.respond("Welcome Image base set to: ", file=Discord.File(base_img_path))
+        await ctx.reply("Welcome Image base set to: ", file=discord.File(base_img_path))
 
     @greetcontent.group(name="template")
     async def get_tempate(self, ctx):
         """responds to command with the template for the welcome image so users can create their own easier"""
-        await ctx.respond("Here is the template file!", file=Discord.File("UBCANI_welcome_template.png"))
+        await ctx.reply("Here is the template file!", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
 
     ### CUSTOM WELCOME PICTURE GENERATION ###
-    def generate_welcome_img(self, user, avatar):
+    async def generate_welcome_img(self, user):
         """creates an image for the specific player using their avatar and saves it to the custom image folder, then returns the path to that image"""
         base = Image.open(os.path.join(self.data_dir, "default.png"))
+        mask = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "MASK.png"))
 
-        usr = "{}.png"
-        gen_image_path = os.path.join(self.img_dir, usr.format(user.id))
-        avatar.save(gen_image_path)
-        retrieved_avatar = Image.open(gen_image_path)
+        #get avatar from User
+        avatar: bytes
 
-        base.paste(retrieved_avatar, (0,0))
-        base.save(gen_image_path)
+        try:
+            async with self.session.get(str(user.avatar_url), headers = self.headers) as webp:
+                avatar = await webp.read()
+        except aiohttp.ClientResponseError:
+            pass
 
-        return gen_image_path
+        with Image.open(io.BytesIO(avatar)) as retrieved_avatar:
+            if not retrieved_avatar:
+                return
+            else:
+                #base = base.resize((1193, 671), 2)
+                retrieved_avatar = retrieved_avatar.resize((325,325), 1)
+                base.paste(retrieved_avatar, (434,0), mask)
+                generated = io.BytesIO()
+                base.save(generated, format="png")
+                generated.seek(0)
+                return generated
+            
+
+        #usr = "{}.png"
+        #gen_image_path = os.path.join(self.img_dir, usr.format(user.id))
+        #print(user.avatar_url)
+        #await user.avatar.save(gen_image_path)
+        #retrieved_avatar = Image.open(gen_image_path)
+
+        #base.paste(retrieved_avatar, (0,0))
+        #base.save(gen_image_path)
 
     def generate_random_welcome_img(self, user, avatar):
         pass
