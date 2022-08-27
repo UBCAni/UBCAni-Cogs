@@ -248,7 +248,8 @@ class CustomWelcomes(commands.Cog):
         """creates an image for the specific player using their avatar and saves it to the custom image folder, then returns the path to that image"""
         base = Image.open(os.path.join(self.data_dir, "default.png"))
         mask = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "MASK.png"))
-
+        border_overlay = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "BORDER.png"))
+        border_overlay_mask = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "BORDER_mask.png"))
         #get avatar from User
         avatar: bytes
 
@@ -264,6 +265,7 @@ class CustomWelcomes(commands.Cog):
             else:
                 #base = base.resize((1193, 671), 2)
                 retrieved_avatar = retrieved_avatar.resize((325,325), 1)
+                base.paste(border_overlay, (434,0), border_overlay_mask)
                 base.paste(retrieved_avatar, (434,0), mask)
                 generated = io.BytesIO()
                 base.save(generated, format="png")
