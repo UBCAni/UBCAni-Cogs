@@ -3,4 +3,5 @@ env
 utils
 usercommandmgmt/__pycache__/
 *.pyc 
-..vs
+.*
+!/.gitignore
