@@ -183,7 +183,7 @@ class CustomWelcomes(commands.Cog):
 
         await ctx.send("randomising custom image set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_img")()))
 
-    @greetsettings.group(name="currrentgreet")
+    @greetsettings.group(name="currentgreet")
     @checks.mod_or_permissions(administrator=True)
     async def get_current_greeting(self, ctx):
         await ctx.send("Current Message is: "+ str(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
