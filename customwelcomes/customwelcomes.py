@@ -140,6 +140,11 @@ class CustomWelcomes(commands.Cog):
         #invert valuue
         value = not value
 
+        #if setting to true, prevent toggle on if there is no image set
+        if value and os.path.isfile(os.path.join(self.data_dir, "default.png")) == False:
+            await ctx.send("Set an image to use first please.")
+            return
+
         #change value
         await self.config.guild(ctx.author.guild).toggle_img.set(value)
 
@@ -206,6 +211,14 @@ class CustomWelcomes(commands.Cog):
         new_welcome_message = "New welcome message is : {}"
         await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
 
+    @greetcontent.group(name="setmandatory")
+    @checks.mod_or_permissions(administrator=True)
+    async def set_mandatory_text(self, ctx, txt):
+        """Sets the mandatory message snippet to be sent with the message thats sent when a user joins the server"""
+        await self.config.guild(ctx.author.guild).mandatory_msg_frag.set(txt)
+        new_welcome_message = "New mandatory message snippet is : {}"
+        await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("mandatory_msg_frag")()))
+
     @greetcontent.group(name="setimg")
     @checks.mod_or_permissions(administrator=True)
     async def set_image(self, ctx):
@@ -223,7 +236,7 @@ class CustomWelcomes(commands.Cog):
         await ctx.reply("Welcome Image base set to: ", file=discord.File(base_img_path))
 
     @greetcontent.group(name="template")
-    async def get_tempate(self, ctx):
+    async def get_template(self, ctx):
         """responds to command with the template for the welcome image so users can create their own easier"""
         await ctx.reply("Here is the template file!", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
 
