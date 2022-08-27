@@ -140,6 +140,11 @@ class CustomWelcomes(commands.Cog):
         #invert valuue
         value = not value
 
+        #if setting to true, prevent toggle on if there is no image set
+        if value and os.path.isfile(os.path.join(self.data_dir, "default.png")) == False:
+            await ctx.send("Set an image to use first please.")
+            return
+
         #change value
         await self.config.guild(ctx.author.guild).toggle_img.set(value)
 
@@ -183,7 +188,7 @@ class CustomWelcomes(commands.Cog):
 
         await ctx.send("randomising custom image set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_img")()))
 
-    @greetsettings.group(name="currrentgreet")
+    @greetsettings.group(name="currentgreet")
     @checks.mod_or_permissions(administrator=True)
     async def get_current_greeting(self, ctx):
         await ctx.send("Current Message is: "+ str(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
@@ -206,6 +211,14 @@ class CustomWelcomes(commands.Cog):
         new_welcome_message = "New welcome message is : {}"
         await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
 
+    @greetcontent.group(name="setmandatory")
+    @checks.mod_or_permissions(administrator=True)
+    async def set_mandatory_text(self, ctx, txt):
+        """Sets the mandatory message snippet to be sent with the message thats sent when a user joins the server"""
+        await self.config.guild(ctx.author.guild).mandatory_msg_frag.set(txt)
+        new_welcome_message = "New mandatory message snippet is : {}"
+        await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("mandatory_msg_frag")()))
+
     @greetcontent.group(name="setimg")
     @checks.mod_or_permissions(administrator=True)
     async def set_image(self, ctx):
@@ -216,6 +229,11 @@ class CustomWelcomes(commands.Cog):
         else:
             await ctx.reply("You need to attach exactly 1 image in the message that uses this command")
             return
+
+        # Performing necessary checks to ensure that this base can produce a good generated image
+        temp = Image.open(base_img_path)
+        temp_resize = temp.resize((1193, 671), 2)
+        temp_resize.save(base_img_path, dpi=(72, 72))
 
         base_img_path = os.path.join(self.data_dir, "default.png")
         await image.save(base_img_path)
