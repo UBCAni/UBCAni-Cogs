@@ -233,6 +233,11 @@ class CustomWelcomes(commands.Cog):
         base_img_path = os.path.join(self.data_dir, "default.png")
         await image.save(base_img_path)
 
+        # Performing necessary checks to ensure that this base can produce a good generated image
+        temp = Image.open(base_img_path)
+        temp_resize = temp.resize((1193, 671), 2)
+        temp_resize.save(base_img_path, dpi=(72, 72))
+
         await ctx.reply("Welcome Image base set to: ", file=discord.File(base_img_path))
 
     @greetcontent.group(name="template")
