@@ -154,6 +154,9 @@ class CustomWelcomes(commands.Cog):
     @checks.mod_or_permissions(administrator=True)
     async def toggle_msg_randomiser(self, ctx):
         """Call this to toggle random welcome message on and off"""
+        await ctx.send("Not yet implemented!")
+        return 
+
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()
 
         #invert valuue
@@ -172,6 +175,9 @@ class CustomWelcomes(commands.Cog):
     @greetsettings.group(name="togglerandomimg")
     @checks.mod_or_permissions(administrator=True)
     async def toggle_img_randomiser(self, ctx):
+        await ctx.send("Not yet implemented!")
+        return 
+
         """Call this to toggle random welcome message on and off"""
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_img")()
 
@@ -238,10 +244,15 @@ class CustomWelcomes(commands.Cog):
         base_img_path = os.path.join(self.data_dir, "default.png")
         await image.save(base_img_path)
 
+        # Performing necessary checks to ensure that this base can produce a good generated image
+        temp = Image.open(base_img_path)
+        temp_resize = temp.resize((1193, 671), 2)
+        temp_resize.save(base_img_path, dpi=(72, 72))
+
         await ctx.reply("Welcome Image base set to: ", file=discord.File(base_img_path))
 
     @greetcontent.group(name="template")
-    async def get_tempate(self, ctx):
+    async def get_template(self, ctx):
         """responds to command with the template for the welcome image so users can create their own easier"""
         await ctx.reply("Here is the template file!", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
 
