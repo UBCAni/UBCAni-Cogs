@@ -353,9 +353,9 @@ class Usercommandmgmt(CustomCommands):
         )
         current_max = self.get_highest_user_comm_allowance(ctx.message.author)
 
-        MESSAGE_TEMPLATE = """You have assigned {currrent_amt} out of {max_amt} commands available to you"""
+        MESSAGE_TEMPLATE = """You have assigned {current_amt} out of {max_amt} commands available to you"""
 
-        msg = MESSAGE_TEMPLATE.format(currrent_amt=currently_used, max_amt=current_max)
+        msg = MESSAGE_TEMPLATE.format(current_amt=currently_used, max_amt=current_max)
 
         await ctx.send(msg)
 
