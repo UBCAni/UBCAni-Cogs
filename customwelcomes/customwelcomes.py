@@ -35,7 +35,7 @@ class CustomWelcomes(commands.Cog):
 
         # create folder to hold welcome images
         try:
-            os.mkdir(os.path.join(self.img_dir)
+            os.mkdir(os.path.join(self.img_dir))
         except OSError as error: 
             pass
 
