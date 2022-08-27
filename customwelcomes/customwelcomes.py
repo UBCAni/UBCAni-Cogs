@@ -1,4 +1,4 @@
-from redbot.core import commands, Config, data_manager
+from redbot.core import commands, Config, data_manager, checks
 from redbot.core.bot import Red
 import discord
 import os
@@ -40,6 +40,7 @@ class CustomWelcomes(commands.Cog):
             pass
 
     @commands.Cog.listener()
+    @checks.mod_or_permissions(administrator=True)
     async def on_member_join(self, member):
         guild = member.guild
         channel = discord.utils.get(guild.channels, id= await self.config.guild(guild).get_attr("welcome_msg_channel")())
@@ -93,11 +94,13 @@ class CustomWelcomes(commands.Cog):
     ### TOGGLE & UTLITY COMMANDS ###
     @commands.group(aliases=["welcomecfg"])
     @commands.guild_only()
+    @checks.mod_or_permissions(administrator=True)
     async def greetsettings(self, ctx: commands.Context):
         """Base command for configuring the customised welcome."""
         pass
 
     @greetsettings.group(name="setch")
+    @checks.mod_or_permissions(administrator=True)
     async def setwelcomech(self, ctx):
         """Call this in the channel where you want to display welcomes"""
         # Your code will go here
@@ -105,6 +108,7 @@ class CustomWelcomes(commands.Cog):
         await ctx.send("New welcome channel is: " + ctx.channel.name)
 
     @greetsettings.group(name="getstatus")
+    @checks.mod_or_permissions(administrator=True)
     async def getwelcomestatus(self, ctx):
         """Call this in the channel where you want to display welcomes"""
         # Your code will go here
@@ -114,6 +118,7 @@ class CustomWelcomes(commands.Cog):
         await ctx.send("Sending custom image: "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
 
     @greetsettings.group(name="togglemsg")
+    @checks.mod_or_permissions(administrator=True)
     async def togglewelmsg(self, ctx):
         """Call this to toggle welcome message on and off"""
         value = await self.config.guild(ctx.author.guild).get_attr("toggle_msg")()
@@ -127,6 +132,7 @@ class CustomWelcomes(commands.Cog):
         await ctx.send("Sending custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("toggle_msg")()))
 
     @greetsettings.group(name="toggleimg")
+    @checks.mod_or_permissions(administrator=True)
     async def togglewelimg(self, ctx):
         """Call this to toggle welcome image on and off"""
         value = await self.config.guild(ctx.author.guild).get_attr("toggle_img")()
@@ -140,6 +146,7 @@ class CustomWelcomes(commands.Cog):
         await ctx.send("Sending custom image set to "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
 
     @greetsettings.group(name="togglerandommsg")
+    @checks.mod_or_permissions(administrator=True)
     async def toggle_msg_randomiser(self, ctx):
         """Call this to toggle random welcome message on and off"""
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()
@@ -158,6 +165,7 @@ class CustomWelcomes(commands.Cog):
         await ctx.send("randomising custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()))
 
     @greetsettings.group(name="togglerandomimg")
+    @checks.mod_or_permissions(administrator=True)
     async def toggle_img_randomiser(self, ctx):
         """Call this to toggle random welcome message on and off"""
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_img")()
@@ -176,6 +184,7 @@ class CustomWelcomes(commands.Cog):
         await ctx.send("randomising custom image set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_img")()))
 
     @greetsettings.group(name="currrentgreet")
+    @checks.mod_or_permissions(administrator=True)
     async def get_current_greeting(self, ctx):
         await ctx.send("Current Message is: "+ str(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
         await ctx.send("Mandatory Message Fragment: " + str(await self.config.guild(ctx.author.guild).get_attr("mandatory_msg_frag")()))
@@ -184,11 +193,13 @@ class CustomWelcomes(commands.Cog):
 
     ### SET MESSAGE & PICTURE COMMANDS ###
     @commands.group(aliases=["welcomeset"])
+    @checks.mod_or_permissions(administrator=True)
     async def greetcontent(self, ctx: commands.Context):
         """Base command for configuring the image/text used for customised welcome."""
         pass
 
     @greetcontent.group(name="settxt")
+    @checks.mod_or_permissions(administrator=True)
     async def set_text(self, ctx, txt):
         """Sets the message to be sent when a user joins the server. This must be set before any welcome message is sent"""
         await self.config.guild(ctx.author.guild).def_welcome_msg.set(txt)
@@ -196,6 +207,7 @@ class CustomWelcomes(commands.Cog):
         await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
 
     @greetcontent.group(name="setimg")
+    @checks.mod_or_permissions(administrator=True)
     async def set_image(self, ctx):
         """Sets the image to be sent when a user joins the server. This must be set before any welcome image is sent. Please only attach 1 image, make it fit into the template provided"""
         image = None
@@ -216,11 +228,13 @@ class CustomWelcomes(commands.Cog):
         await ctx.reply("Here is the template file!", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
 
     @greetcontent.group(name="addimg")
+    @checks.mod_or_permissions(administrator=True)
     async def add_img(self, ctx):
         """adds another image to the random image pool"""
         pass
 
     @greetcontent.group(name="addmsg")
+    @checks.mod_or_permissions(administrator=True)
     async def add_msg(self, ctx):
         """adds another message to the random message pool"""
         pass
