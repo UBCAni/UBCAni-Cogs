@@ -154,6 +154,9 @@ class CustomWelcomes(commands.Cog):
     @checks.mod_or_permissions(administrator=True)
     async def toggle_msg_randomiser(self, ctx):
         """Call this to toggle random welcome message on and off"""
+        await ctx.send("Not yet implemented!")
+        return 
+
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()
 
         #invert valuue
@@ -172,6 +175,9 @@ class CustomWelcomes(commands.Cog):
     @greetsettings.group(name="togglerandomimg")
     @checks.mod_or_permissions(administrator=True)
     async def toggle_img_randomiser(self, ctx):
+        await ctx.send("Not yet implemented!")
+        return 
+
         """Call this to toggle random welcome message on and off"""
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_img")()
 
