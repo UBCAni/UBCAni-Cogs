@@ -39,6 +39,11 @@ class CustomWelcomes(commands.Cog):
         except OSError as error: 
             pass
 
+        #load random message pool from database
+        self.local_welcome_msgs = []
+        self.local_welcome_msgs = await self.config.guild(self.config.guild).get_attr("message_pool")()
+
+
     @commands.Cog.listener()
     @checks.mod_or_permissions(administrator=True)
     async def on_member_join(self, member):
@@ -284,10 +289,14 @@ class CustomWelcomes(commands.Cog):
 
     @greetcontent.group(name="addmsg")
     @checks.mod_or_permissions(administrator=True)
-    async def add_msg(self, ctx):
+    async def add_msg(self, ctx, message):
         """adds another message to the random message pool"""
-        pass
+        self.local_welcome_msgs.add(message)
 
+        #updates database
+        await self.config.guild(ctx.author.guild).message_pool.set(self.local_welcome_msgs)
+
+        await ctx.reply(message + " added to random message pool")
 
 
 
