@@ -35,7 +35,7 @@ class CustomWelcomes(commands.Cog):
 
         # create folder to hold welcome images
         try:
-            os.mkdir(os.path.join(self.img_dir))
+            os.mkdir(self.img_dir)
         except OSError as error: 
             pass
 
@@ -229,19 +229,21 @@ class CustomWelcomes(commands.Cog):
     @checks.mod_or_permissions(administrator=True)
     async def set_image(self, ctx):
         """Sets the image to be sent when a user joins the server. This must be set before any welcome image is sent. Please only attach 1 image, make it fit into the template provided"""
+        base_img_path = os.path.join(self.data_dir, "default.png")
         image = None
         if len(ctx.message.attachments) == 1:
             image = ctx.message.attachments[0]
+            image.save(base_img_path)
         else:
             await ctx.reply("You need to attach exactly 1 image in the message that uses this command")
             return
+
 
         # Performing necessary checks to ensure that this base can produce a good generated image
         temp = Image.open(base_img_path)
         temp_resize = temp.resize((1193, 671), 2)
         temp_resize.save(base_img_path, dpi=(72, 72))
 
-        base_img_path = os.path.join(self.data_dir, "default.png")
         await image.save(base_img_path)
 
         # Performing necessary checks to ensure that this base can produce a good generated image
@@ -260,7 +262,25 @@ class CustomWelcomes(commands.Cog):
     @checks.mod_or_permissions(administrator=True)
     async def add_img(self, ctx):
         """adds another image to the random image pool"""
-        pass
+        #determine potential file name
+        num_pictures = len(os.listdir(self.img_dir))
+        file_name = "{}.png"
+        img_path = os.path.join(self.img_dir, file_name.format(num_pictures))
+
+        image = None
+        if len(ctx.message.attachments) == 1:
+            image = ctx.message.attachments[0]
+            image.save(img_path)
+        else:
+            await ctx.reply("You need to attach exactly 1 image in the message that uses this command")
+            return
+
+
+        # Performing necessary checks to ensure that this base can produce a good generated image
+        temp = Image.open(img_path)
+        temp_resize = temp.resize((1193, 671), 2)
+        temp_resize.save(img_path, dpi=(72, 72))
+        await ctx.reply("image added")
 
     @greetcontent.group(name="addmsg")
     @checks.mod_or_permissions(administrator=True)
