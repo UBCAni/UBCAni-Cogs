@@ -42,7 +42,6 @@ class CustomWelcomes(commands.Cog):
 
 
     @commands.Cog.listener()
-    @checks.mod_or_permissions(administrator=True)
     async def on_member_join(self, member):
         guild = member.guild
         channel = discord.utils.get(guild.channels, id= await self.config.guild(guild).get_attr("welcome_msg_channel")())
