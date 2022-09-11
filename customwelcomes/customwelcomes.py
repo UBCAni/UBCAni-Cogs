@@ -5,6 +5,7 @@ import os
 import sys
 import aiohttp
 import io
+import random
 from PIL import Image, ImageChops, ImageOps
 
 class CustomWelcomes(commands.Cog):
@@ -35,12 +36,12 @@ class CustomWelcomes(commands.Cog):
 
         # create folder to hold welcome images
         try:
-            os.mkdir(os.path.join(self.img_dir))
+            os.mkdir(self.img_dir)
         except OSError as error: 
             pass
 
+
     @commands.Cog.listener()
-    @checks.mod_or_permissions(administrator=True)
     async def on_member_join(self, member):
         guild = member.guild
         channel = discord.utils.get(guild.channels, id= await self.config.guild(guild).get_attr("welcome_msg_channel")())
@@ -90,16 +91,23 @@ class CustomWelcomes(commands.Cog):
             # do nothing
             pass
         
-
-    ### TOGGLE & UTLITY COMMANDS ###
-    @commands.group(aliases=["welcomecfg"])
+    ### Base command
+    @commands.group(aliases=["cw"])
     @commands.guild_only()
     @checks.mod_or_permissions(administrator=True)
-    async def greetsettings(self, ctx: commands.Context):
+    async def customwelcome(self, ctx: commands.Context):
+        """Base command for customised welcome."""
+        pass
+
+    ### TOGGLE & UTLITY COMMANDS ###
+    @customwelcome.group(aliases=["cfg"])
+    @commands.guild_only()
+    @checks.mod_or_permissions(administrator=True)
+    async def welcome_configs(self, ctx: commands.Context):
         """Base command for configuring the customised welcome."""
         pass
 
-    @greetsettings.group(name="setch")
+    @welcome_configs.command(name="setch")
     @checks.mod_or_permissions(administrator=True)
     async def setwelcomech(self, ctx):
         """Call this in the channel where you want to display welcomes"""
@@ -107,7 +115,7 @@ class CustomWelcomes(commands.Cog):
         await self.config.guild(ctx.author.guild).welcome_msg_channel.set(ctx.channel.id)
         await ctx.send("New welcome channel is: " + ctx.channel.name)
 
-    @greetsettings.group(name="getstatus")
+    @welcome_configs.command(name="getstatus")
     @checks.mod_or_permissions(administrator=True)
     async def getwelcomestatus(self, ctx):
         """Call this in the channel where you want to display welcomes"""
@@ -116,8 +124,10 @@ class CustomWelcomes(commands.Cog):
         await ctx.send("Current welcome channel is: " + channel.name)
         await ctx.send("Sending custom message: " + str(await self.config.guild(ctx.author.guild).get_attr("toggle_msg")()))
         await ctx.send("Sending custom image: "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
+        await ctx.send("Randomising custom message: " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()))
+        await ctx.send("Randomising custom image: "+ str(await self.config.guild(ctx.author.guild).get_attr("randomise_img")()))
 
-    @greetsettings.group(name="togglemsg")
+    @welcome_configs.command(name="togglemsg")
     @checks.mod_or_permissions(administrator=True)
     async def togglewelmsg(self, ctx):
         """Call this to toggle welcome message on and off"""
@@ -131,7 +141,7 @@ class CustomWelcomes(commands.Cog):
 
         await ctx.send("Sending custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("toggle_msg")()))
 
-    @greetsettings.group(name="toggleimg")
+    @welcome_configs.command(name="toggleimg")
     @checks.mod_or_permissions(administrator=True)
     async def togglewelimg(self, ctx):
         """Call this to toggle welcome image on and off"""
@@ -150,12 +160,12 @@ class CustomWelcomes(commands.Cog):
 
         await ctx.send("Sending custom image set to "+ str(await self.config.guild(ctx.author.guild).get_attr("toggle_img")()))
 
-    @greetsettings.group(name="togglerandommsg")
+    @welcome_configs.command(name="togglerandommsg")
     @checks.mod_or_permissions(administrator=True)
     async def toggle_msg_randomiser(self, ctx):
         """Call this to toggle random welcome message on and off"""
-        await ctx.send("Not yet implemented!")
-        return 
+        #await ctx.send("Not yet implemented!")
+        #return 
 
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()
 
@@ -168,17 +178,16 @@ class CustomWelcomes(commands.Cog):
             return
 
         #change value
-        await self.config.guild(ctx.author.guild).toggle_msg.set(value)
+        await self.config.guild(ctx.author.guild).randomise_msg.set(value)
 
         await ctx.send("randomising custom message set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_msg")()))
 
-    @greetsettings.group(name="togglerandomimg")
+    @welcome_configs.command(name="togglerandomimg")
     @checks.mod_or_permissions(administrator=True)
     async def toggle_img_randomiser(self, ctx):
-        await ctx.send("Not yet implemented!")
-        return 
-
         """Call this to toggle random welcome message on and off"""
+        #await ctx.send("Not yet implemented!")
+        #return 
         value = await self.config.guild(ctx.author.guild).get_attr("randomise_img")()
 
         #invert valuue
@@ -190,26 +199,27 @@ class CustomWelcomes(commands.Cog):
             return
 
         #change value
-        await self.config.guild(ctx.author.guild).toggle_msg.set(value)
+        await self.config.guild(ctx.author.guild).randomise_img.set(value)
 
         await ctx.send("randomising custom image set to " + str(await self.config.guild(ctx.author.guild).get_attr("randomise_img")()))
 
-    @greetsettings.group(name="currentgreet")
+    @welcome_configs.command(name="currentgreet")
     @checks.mod_or_permissions(administrator=True)
     async def get_current_greeting(self, ctx):
+        '''fetches the current set image/text greetings & mandatory message snippet'''
         await ctx.send("Current Message is: "+ str(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
         await ctx.send("Mandatory Message Fragment: " + str(await self.config.guild(ctx.author.guild).get_attr("mandatory_msg_frag")()))
         base_img_path = os.path.join(self.data_dir, "default.png")  
         await ctx.send("Current template image is: ", file=discord.File(base_img_path))
 
     ### SET MESSAGE & PICTURE COMMANDS ###
-    @commands.group(aliases=["welcomeset"])
+    @customwelcome.group(aliases=["content"])
     @checks.mod_or_permissions(administrator=True)
     async def greetcontent(self, ctx: commands.Context):
         """Base command for configuring the image/text used for customised welcome."""
         pass
 
-    @greetcontent.group(name="settxt")
+    @greetcontent.command(name="settxt")
     @checks.mod_or_permissions(administrator=True)
     async def set_text(self, ctx, txt):
         """Sets the message to be sent when a user joins the server. This must be set before any welcome message is sent"""
@@ -217,7 +227,7 @@ class CustomWelcomes(commands.Cog):
         new_welcome_message = "New welcome message is : {}"
         await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
 
-    @greetcontent.group(name="setmandatory")
+    @greetcontent.command(name="setmandatory")
     @checks.mod_or_permissions(administrator=True)
     async def set_mandatory_text(self, ctx, txt):
         """Sets the mandatory message snippet to be sent with the message thats sent when a user joins the server"""
@@ -225,18 +235,25 @@ class CustomWelcomes(commands.Cog):
         new_welcome_message = "New mandatory message snippet is : {}"
         await ctx.send(new_welcome_message.format(await self.config.guild(ctx.author.guild).get_attr("mandatory_msg_frag")()))
 
-    @greetcontent.group(name="setimg")
+    @greetcontent.command(name="setimg")
     @checks.mod_or_permissions(administrator=True)
     async def set_image(self, ctx):
         """Sets the image to be sent when a user joins the server. This must be set before any welcome image is sent. Please only attach 1 image, make it fit into the template provided"""
+        base_img_path = os.path.join(self.data_dir, "default.png")
         image = None
         if len(ctx.message.attachments) == 1:
             image = ctx.message.attachments[0]
+            image.save(base_img_path)
         else:
             await ctx.reply("You need to attach exactly 1 image in the message that uses this command")
             return
 
-        base_img_path = os.path.join(self.data_dir, "default.png")
+
+        # Performing necessary checks to ensure that this base can produce a good generated image
+        temp = Image.open(base_img_path)
+        temp_resize = temp.resize((1193, 671), 2)
+        temp_resize.save(base_img_path, dpi=(72, 72))
+
         await image.save(base_img_path)
 
         # Performing necessary checks to ensure that this base can produce a good generated image
@@ -246,33 +263,57 @@ class CustomWelcomes(commands.Cog):
 
         await ctx.reply("Welcome Image base set to: ", file=discord.File(base_img_path))
 
-    @greetcontent.group(name="template")
+    @greetcontent.command(name="template")
     async def get_template(self, ctx):
         """responds to command with the template for the welcome image so users can create their own easier"""
-        await ctx.reply("Here is the template file!", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
+        await ctx.reply("Here is the template file! For best results please render the image at 72dpi, 1193 x 671. The bot will try to make it conform automatically but mileage may vary.", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
 
-    @greetcontent.group(name="addimg")
+    @greetcontent.command(name="addimg")
     @checks.mod_or_permissions(administrator=True)
     async def add_img(self, ctx):
         """adds another image to the random image pool"""
-        pass
+        #determine potential file name
+        num_pictures = len(os.listdir(self.img_dir))
+        file_name = "{}.png"
+        img_path = os.path.join(self.img_dir, file_name.format(num_pictures))
 
-    @greetcontent.group(name="addmsg")
+        image = None
+        if len(ctx.message.attachments) == 1:
+            image = ctx.message.attachments[0]
+            await image.save(img_path)
+        else:
+            await ctx.reply("You need to attach exactly 1 image in the message that uses this command")
+            return
+
+
+        # Performing necessary checks to ensure that this base can produce a good generated image
+        temp = Image.open(img_path)
+        temp_resize = temp.resize((1193, 671), 2)
+        temp_resize.save(img_path, dpi=(72, 72))
+        await ctx.reply("image added")
+
+    @greetcontent.command(name="addmsg")
     @checks.mod_or_permissions(administrator=True)
-    async def add_msg(self, ctx):
+    async def add_msg(self, ctx, message):
         """adds another message to the random message pool"""
-        pass
+        local_welcome_msgs = await self.config.guild(ctx.author.guild).get_attr("message_pool")()
+        local_welcome_msgs.append(message)
 
+        #updates database
+        await self.config.guild(ctx.author.guild).message_pool.set(local_welcome_msgs)
+
+        await ctx.reply(message + " added to random message pool")
 
 
 
 
     ### CUSTOM WELCOME PICTURE GENERATION ###
     async def generate_welcome_img(self, user):
-        """creates an image for the specific player using their avatar and saves it to the custom image folder, then returns the path to that image"""
+        """creates an image for the specific player using their avatar and the set base image, then returns it"""
         base = Image.open(os.path.join(self.data_dir, "default.png"))
         mask = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "MASK.png"))
-
+        border_overlay = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "BORDER.png"))
+        border_overlay_mask = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "BORDER_mask.png"))
         #get avatar from User
         avatar: bytes
 
@@ -288,6 +329,7 @@ class CustomWelcomes(commands.Cog):
             else:
                 #base = base.resize((1193, 671), 2)
                 retrieved_avatar = retrieved_avatar.resize((325,325), 1)
+                base.paste(border_overlay, (434,0), border_overlay_mask)
                 base.paste(retrieved_avatar, (434,0), mask)
                 generated = io.BytesIO()
                 base.save(generated, format="png")
@@ -304,20 +346,40 @@ class CustomWelcomes(commands.Cog):
         #base.paste(retrieved_avatar, (0,0))
         #base.save(gen_image_path)
 
-    def generate_random_welcome_img(self, user):
-        pass
+    async def generate_random_welcome_img(self, user):
+        """creates an image for the specific player using their avatar and an image from the random image pool, then returns it"""
+        base = Image.open(os.path.join(self.img_dir, random.choice(os.listdir(self.img_dir))))
+        mask = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "MASK.png"))
+        border_overlay = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "BORDER.png"))
+        border_overlay_mask = Image.open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "BORDER_mask.png"))
+        #get avatar from User
+        avatar: bytes
 
+        try:
+            async with self.session.get(str(user.avatar_url), headers = self.headers) as webp:
+                avatar = await webp.read()
+        except aiohttp.ClientResponseError:
+            pass
+
+        with Image.open(io.BytesIO(avatar)) as retrieved_avatar:
+            if not retrieved_avatar:
+                return
+            else:
+                #base = base.resize((1193, 671), 2)
+                retrieved_avatar = retrieved_avatar.resize((325,325), 1)
+                base.paste(border_overlay, (434,0), border_overlay_mask)
+                base.paste(retrieved_avatar, (434,0), mask)
+                generated = io.BytesIO()
+                base.save(generated, format="png")
+                generated.seek(0)
+                return generated
+  
     ### CUSTOM WELCOME MESSAGE GENERATION ###
     async def get_welcome_msg(self, author):
         msg =  await self.config.guild(author.guild).get_attr("def_welcome_msg")()
         return msg
 
-    def get_random_welcome_msg(self, author):
-        pass
+    async def get_random_welcome_msg(self, author):
+        local_welcome_msgs = await self.config.guild(author.guild).get_attr("message_pool")()
+        return random.choice(local_welcome_msgs)
 
-
-#   @commands.command()
-#   async def mycom(self, ctx):
-#       """This does stuff!"""
-#       # Your code will go here
-#       await ctx.send(await self.config.guild(ctx.guild).get_attr(FIRST_RUN)())
