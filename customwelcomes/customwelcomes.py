@@ -206,6 +206,7 @@ class CustomWelcomes(commands.Cog):
     @welcome_configs.command(name="currentgreet")
     @checks.mod_or_permissions(administrator=True)
     async def get_current_greeting(self, ctx):
+        '''fetches the current set image/text greetings & mandatory message snippet'''
         await ctx.send("Current Message is: "+ str(await self.config.guild(ctx.author.guild).get_attr("def_welcome_msg")()))
         await ctx.send("Mandatory Message Fragment: " + str(await self.config.guild(ctx.author.guild).get_attr("mandatory_msg_frag")()))
         base_img_path = os.path.join(self.data_dir, "default.png")  
@@ -265,7 +266,7 @@ class CustomWelcomes(commands.Cog):
     @greetcontent.command(name="template")
     async def get_template(self, ctx):
         """responds to command with the template for the welcome image so users can create their own easier"""
-        await ctx.reply("Here is the template file!", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
+        await ctx.reply("Here is the template file! For best results please render the image at 72dpi, 1193 x 671. The bot will try to make it conform automatically but mileage may vary.", file=discord.File(os.path.join(os.path.dirname(os.path.realpath(__file__)), "welcome_template.png")))
 
     @greetcontent.command(name="addimg")
     @checks.mod_or_permissions(administrator=True)
