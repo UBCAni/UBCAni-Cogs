@@ -1,0 +1,11 @@
+﻿{
+  "name": "eventmanager",
+  "author": ["くずま#0420"],
+  "short": "Useful tools for handling multiple events",
+  "description": "This cog makes it easier to save, organise and fetch data from events. Has additional tools for facilitating specific activities during events",
+  "install_msg": "Thanks for installing event manager.",
+  "requirements": [ ],
+  "tags": [ "utility" ],
+  "permissions": [],
+  "end_user_data_statement": "This cog stores a user's discord tag."
+}
