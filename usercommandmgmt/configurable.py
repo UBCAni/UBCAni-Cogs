@@ -32,6 +32,20 @@ class Config:
             # the number of approvals and rejects needed to accept/reject a command request
             self.loaded_cmd_data["number_of_mod_reacts_needed"] = {"0000000000000": 2}
 
+            # elevated permission roles
+            self.loaded_cmd_data["priveleged_roles"] = []
+
+    def add_priveleged_role(self, id):
+        self.loaded_cmd_data.get("priveleged_roles").append(id)
+        self.save_state_to_file()
+
+    def remove_priveleged_role(self, id):
+        self.loaded_cmd_data.get("priveleged_roles").remove(id)
+        self.save_state_to_file()
+
+    def get_priveleged_roleIDs(self):
+        return self.loaded_cmd_data.get("priveleged_roles")
+
     def save_state_to_file(self):
         """
         saves the current config details to the file
