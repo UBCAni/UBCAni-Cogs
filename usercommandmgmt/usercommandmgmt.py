@@ -17,28 +17,28 @@ from redbot.cogs.customcom.customcom import (
 )
 
 
-class CCError(Exception):
-    pass
+# class CCError(Exception):
+#     pass
 
 
-class AlreadyExists(CCError):
-    pass
+# class AlreadyExists(CCError):
+#     pass
 
 
-class ArgParseError(CCError):
-    pass
+# class ArgParseError(CCError):
+#     pass
 
 
-class NotFound(CCError):
-    pass
+# class NotFound(CCError):
+#     pass
 
 
-class OnCooldown(CCError):
-    pass
+# class OnCooldown(CCError):
+#     pass
 
 
-class CommandNotEdited(CCError):
-    pass
+# class CommandNotEdited(CCError):
+#     pass
 
 
 class Usercommandmgmt(CustomCommands):
@@ -131,7 +131,7 @@ class Usercommandmgmt(CustomCommands):
             return
 
         # overrides the mod process and limit check if user is an admin
-        if ctx.message.author.top_role.permissions.administrator:
+        if ctx.message.author.top_role.permissions.administrator or self.a_has_role_in_b(ctx.author.roles, self.mod_config.get_priveleged_roleIDs()):
             await ctx.send("Admin request detected. Bypassing checks")
             # custom command is created and the entry is added to the database
             try:
@@ -186,7 +186,7 @@ class Usercommandmgmt(CustomCommands):
         - `<command>` The custom command to delete.
         """
         # if user is admin, allows them to delete any command
-        if ctx.message.author.top_role.permissions.administrator:
+        if ctx.message.author.top_role.permissions.administrator or self.a_has_role_in_b(ctx.author.roles, self.mod_config.get_priveleged_roleIDs()):
             try:
                 await ctx.send("Admin Override.")
                 await self.commandobj.delete(ctx=ctx, command=command)
@@ -210,6 +210,7 @@ class Usercommandmgmt(CustomCommands):
             await ctx.send("Custom command successfully deleted.")
 
     @customcom.command(name="edit")
+    @checks.mod_or_permissions(administrator=True)
     async def cc_edit(self, ctx, command: str.lower, *, text: str = None):
         """Edit a custom command.
 
@@ -221,7 +222,7 @@ class Usercommandmgmt(CustomCommands):
         - `<command>` The custom command to edit.
         - `<text>` The new text to return when executing the command.
         """
-        if ctx.message.author.top_role.permissions.administrator:
+        if ctx.message.author.top_role.permissions.administrator or self.a_has_role_in_b(ctx.author.roles, self.mod_config.get_priveleged_roleIDs())::
             await ctx.send("Admin Override.")
 
             try:
@@ -448,7 +449,37 @@ class Usercommandmgmt(CustomCommands):
                 "New Allowance of " + str(new_allowance) + " set for " + role
             )
 
+    @checks.mod_or_permissions(administrator=True)
+    @commands.command(name="addmodrole")
+    async def addmodrole(self, ctx, id: int):
+        if self.mod_role_registered(id):
+            await ctx.send("Role is already marked as a mod role")
+            return
+        await ctx.send(f"role with id: {id} added")
+        self.mod_config.add_priveleged_role(id)
+
+    @checks.mod_or_permissions(administrator=True)
+    @commands.command(name="delmodrole")
+    async def delmodrole(self, ctx, id: int):
+        if not self.mod_role_registered(id):
+            await ctx.send("Role isn't marked as a mod role already")
+            return
+        await ctx.send(f"role with id: {id} removed")
+        self.mod_config.remove_priveleged_role(id)
+
     # helper functions
+    def mod_role_registered(self, id):
+        modRoles = self.mod_config.get_priveleged_roleIDs()
+        return (id in modRoles)
+    
+    def a_has_role_in_b(self, a, b):
+        for role in a:
+            for otherRoleId in b:
+                if role.id == otherRoleId:
+                    return True
+
+        return False
+    
     def enforce_user_cmd_limit(self, member, server):
         """
         returns true if the current number commands owned by the user is less than the highest amount allowed by any of their roles.
